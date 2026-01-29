@@ -89,7 +89,7 @@ export function TimezoneInfo({
 
   return (
     <div
-      className={`group grid grid-cols-[auto_1fr_auto] gap-1 px-2 py-3 relative cursor-move transition-colors ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)_minmax(0,auto)] gap-1 px-2 py-3 relative cursor-move transition-colors ${
         isDragging ? 'opacity-50' : ''
       } ${dragOver ? 'bg-blue-50 border-t-2 border-t-primary' : ''}`}
       draggable={!!onDragStart}
@@ -123,7 +123,7 @@ export function TimezoneInfo({
       </div>
 
       {/* Second column: Timezone label (editable) and name */}
-      <div className="flex flex-col items-start justify-center">
+      <div className="flex flex-col items-start justify-center min-w-0 overflow-hidden">
         {isEditingLabel ? (
           <input
             ref={inputRef}
@@ -138,26 +138,33 @@ export function TimezoneInfo({
           />
         ) : (
           <div
-            className={`text-sm font-bold text-black leading-tight ${
+            className={`text-sm font-bold text-black leading-tight truncate w-full ${
               onUpdateLabel ? 'cursor-text hover:bg-blue-100 rounded px-1 -mx-1' : ''
             }`}
             onClick={handleLabelClick}
-            title={onUpdateLabel ? 'Click to edit label' : ''}
+            title={displayLabel}
           >
             {displayLabel}
           </div>
         )}
-        <div className="text-[10px] text-gray-500 leading-tight">{timezone.name}</div>
+        <div className="text-[10px] text-gray-500 leading-tight truncate w-full" title={timezone.name}>
+          {timezone.name}
+        </div>
       </div>
 
       {/* Third column: Time and date */}
-      <div className="flex flex-col items-end justify-center">
-        <div className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5">
-          <span>{displayTimeValue}</span>
-          {ampm && <span className="text-[10px] font-normal">{ampm}</span>}
+      <div className="flex flex-col items-end justify-center min-w-0 max-w-[140px] overflow-hidden">
+        <div 
+          className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5 truncate w-full justify-end"
+          title={`${displayTimeValue}${ampm ? ` ${ampm}` : ''}`}
+        >
+          <span className="truncate">{displayTimeValue}</span>
+          {ampm && <span className="text-[10px] font-normal flex-shrink-0">{ampm}</span>}
         </div>
         {formattedDateStr && (
-          <div className="text-[10px] text-gray-500 leading-tight">{formattedDateStr}</div>
+          <div className="text-[10px] text-gray-500 leading-tight truncate w-full text-right" title={formattedDateStr}>
+            {formattedDateStr}
+          </div>
         )}
       </div>
     </div>
