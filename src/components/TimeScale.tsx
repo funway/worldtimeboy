@@ -10,6 +10,7 @@ interface TimeScaleProps {
   hoverPosition: number | null;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
+  onClick?: (position: number) => void;
   rowIndex: number;
 }
 
@@ -21,6 +22,7 @@ export function TimeScale({
   hoverPosition,
   onMouseMove,
   onMouseLeave,
+  onClick,
 }: TimeScaleProps) {
   const { startHour, dateMarkers } = config;
   const positions = Array.from({ length: 24 }, (_, i) => i);
@@ -88,11 +90,23 @@ export function TimeScale({
     onMouseMove(position);
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onClick) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const padding = 8; // px-2
+    const cellAreaWidth = rect.width - (padding * 2);
+    const cellWidth = cellAreaWidth / 24;
+    const x = e.clientX - rect.left - padding;
+    const position = Math.max(0, Math.min(23, Math.floor(x / cellWidth)));
+    onClick(position);
+  };
+
   return (
     <div 
       className="time-scale relative w-full h-full px-2 flex items-center cursor-default"
       onMouseMove={handleMouseMove}
       onMouseLeave={onMouseLeave}
+      onClick={handleClick}
     >
       {positions.map((position) => {
         const actualHour = getHourAtPosition(position, startHour);

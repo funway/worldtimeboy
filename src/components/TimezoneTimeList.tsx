@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { TimezoneWithOffset } from '../types';
 import { TimeScaleConfig } from '../types';
 import { TimezoneTimeRow } from './TimezoneTimeRow';
@@ -29,8 +29,251 @@ export function TimezoneTimeList({
   onMouseMove,
   onMouseLeave,
 }: TimezoneTimeListProps) {
+  // All state hooks first
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [overlayStyle, setOverlayStyle] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+  } | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [startPosition, setStartPosition] = useState<number | null>(null);
+  const [endPosition, setEndPosition] = useState<number | null>(null);
+  const [draggingBorder, setDraggingBorder] = useState<'left' | 'right' | null>(null);
+  const [selectionStyle, setSelectionStyle] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+    leftBorder: number;
+    rightBorder: number;
+    timescaleAreaLeft: number;
+    timescaleAreaWidth: number;
+  } | null>(null);
+
+  // All refs next
+  const containerRef = useRef<HTMLDivElement>(null);
+  const firstTimeScaleRef = useRef<HTMLDivElement>(null);
+  const startPositionRef = useRef<number | null>(null);
+  const endPositionRef = useRef<number | null>(null);
+  const draggingBorderRef = useRef<'left' | 'right' | null>(null);
+  const isSelectingRef = useRef(false);
+  const isDraggingRef = useRef(false);
+
+  // Helper function to calculate cell dimensions
+  // Using useCallback to ensure stable reference
+  const getCellDimensions = useCallback(() => {
+    if (!firstTimeScaleRef.current || !containerRef.current) {
+      return null;
+    }
+
+    const timeScaleElement = firstTimeScaleRef.current.querySelector('.time-scale') as HTMLElement;
+    if (!timeScaleElement) {
+      return null;
+    }
+
+    const timeScaleRect = timeScaleElement.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
+    const padding = 8; // px-2 = 0.5rem = 8px
+    const cellAreaWidth = timeScaleRect.width - (padding * 2);
+    const cellWidth = cellAreaWidth / 24;
+    const verticalPadding = 4;
+    
+    return {
+      timeScaleRect,
+      containerRect,
+      padding,
+      cellWidth,
+      verticalPadding,
+    };
+  }, []);
+
+  // Calculate overlay position and size when hoverPosition changes
+  useEffect(() => {
+    if (hoverPosition === null || isSelecting) {
+      setOverlayStyle(null);
+      return;
+    }
+
+    const dims = getCellDimensions();
+    if (!dims) {
+      setOverlayStyle(null);
+      return;
+    }
+
+    const { timeScaleRect, containerRect, padding, cellWidth, verticalPadding } = dims;
+    
+    // Calculate overlay position relative to container
+    const overlayLeft = timeScaleRect.left - containerRect.left + padding + (hoverPosition * cellWidth);
+    const overlayWidth = cellWidth;
+    const overlayTop = verticalPadding;
+    const overlayHeight = containerRect.height - (verticalPadding * 2);
+    
+    setOverlayStyle({
+      left: overlayLeft,
+      width: overlayWidth,
+      top: overlayTop,
+      height: overlayHeight,
+    });
+  }, [hoverPosition, timeScaleConfigs.length, isSelecting, getCellDimensions]);
+
+  useEffect(() => {
+    if (!isSelecting || startPosition === null || endPosition === null) {
+      setSelectionStyle(null);
+      return;
+    }
+
+    const dims = getCellDimensions();
+    if (!dims) {
+      setSelectionStyle(null);
+      return;
+    }
+
+    const { timeScaleRect, containerRect, padding, cellWidth, verticalPadding } = dims;
+    
+    // Ensure start <= end
+    const minPos = Math.min(startPosition, endPosition);
+    const maxPos = Math.max(startPosition, endPosition);
+    
+    // Calculate selection area
+    const selectionLeft = timeScaleRect.left - containerRect.left + padding + (minPos * cellWidth);
+    const selectionWidth = (maxPos - minPos + 1) * cellWidth;
+    const selectionTop = verticalPadding;
+    const selectionHeight = containerRect.height - (verticalPadding * 2);
+    
+    // Calculate border positions
+    const leftBorder = selectionLeft;
+    const rightBorder = selectionLeft + selectionWidth;
+    
+    // Calculate timescale area (for full overlay)
+    const timescaleAreaLeft = timeScaleRect.left - containerRect.left;
+    const timescaleAreaWidth = timeScaleRect.width;
+    
+    setSelectionStyle({
+      left: selectionLeft,
+      width: selectionWidth,
+      top: selectionTop,
+      height: selectionHeight,
+      leftBorder,
+      rightBorder,
+      timescaleAreaLeft,
+      timescaleAreaWidth,
+    });
+  }, [isSelecting, startPosition, endPosition, timeScaleConfigs.length, getCellDimensions]);
+
+  // Sync refs with state
+  useEffect(() => {
+    startPositionRef.current = startPosition;
+    endPositionRef.current = endPosition;
+    draggingBorderRef.current = draggingBorder;
+    isSelectingRef.current = isSelecting;
+  }, [startPosition, endPosition, draggingBorder, isSelecting]);
+
+  // Handle mouse move during selection (for dragging borders)
+  const handleSelectionMouseMove = useCallback((e: MouseEvent | React.MouseEvent) => {
+    if (!isSelectingRef.current || !firstTimeScaleRef.current) return;
+
+    const timeScaleElement = firstTimeScaleRef.current.querySelector('.time-scale') as HTMLElement;
+    if (!timeScaleElement) return;
+
+    const rect = timeScaleElement.getBoundingClientRect();
+    const padding = 8;
+    const cellAreaWidth = rect.width - (padding * 2);
+    const cellWidth = cellAreaWidth / 24;
+    const x = e.clientX - rect.left - padding;
+    const position = Math.max(0, Math.min(23, Math.floor(x / cellWidth)));
+
+    const currentStart = startPositionRef.current;
+    const currentEnd = endPositionRef.current;
+    const currentDraggingBorder = draggingBorderRef.current;
+
+    if (currentDraggingBorder === 'left') {
+      // Ensure left border doesn't cross right border and minimum width is 1 cell
+      if (currentStart !== null && currentEnd !== null) {
+        const newStart = Math.min(position, currentEnd);
+        if (currentEnd - newStart >= 0) {
+          setStartPosition(newStart);
+        }
+      }
+    } else if (currentDraggingBorder === 'right') {
+      // Ensure right border doesn't cross left border and minimum width is 1 cell
+      if (currentStart !== null && currentEnd !== null) {
+        const newEnd = Math.max(position, currentStart);
+        if (newEnd - currentStart >= 0) {
+          setEndPosition(newEnd);
+        }
+      }
+    }
+    // Removed: auto-update endPosition on hover - only allow dragging borders
+  }, []);
+
+  // Handle mouse up to stop dragging
+  const handleSelectionMouseUp = useCallback(() => {
+    setDraggingBorder(null);
+    // Use setTimeout to prevent click event from firing immediately after drag
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 100);
+  }, []);
+
+  // Global mouse event listeners for dragging
+  useEffect(() => {
+    if (draggingBorder) {
+      const handleGlobalMouseMove = (e: MouseEvent) => {
+        handleSelectionMouseMove(e);
+      };
+      
+      const handleGlobalMouseUp = () => {
+        handleSelectionMouseUp();
+      };
+
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+      };
+    }
+  }, [draggingBorder, handleSelectionMouseMove, handleSelectionMouseUp]);
+
+  // Handle click outside to cancel selection
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isSelecting && containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsSelecting(false);
+        setStartPosition(null);
+        setEndPosition(null);
+        setDraggingBorder(null);
+      }
+    };
+
+    if (isSelecting) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isSelecting]);
+
+  // Handle click on TimeScale to start or cancel selection
+  const handleTimeScaleClick = (position: number) => {
+    if (isSelecting) {
+      // Cancel selection if already selecting
+      setIsSelecting(false);
+      setStartPosition(null);
+      setEndPosition(null);
+      setDraggingBorder(null);
+    } else {
+      // Start new selection
+      setIsSelecting(true);
+      setStartPosition(position);
+      setEndPosition(position);
+    }
+  };
 
   if (timezones.length === 0) {
     return (
@@ -75,7 +318,7 @@ export function TimezoneTimeList({
   };
 
   return (
-    <div className="relative flex-1 overflow-y-auto">
+    <div ref={containerRef} className="relative flex-1 overflow-y-auto">
       <div className="relative overflow-x-visible overflow-y-visible">
         {timeScaleConfigs.map(({ timezone, config }, index) => (
           <TimezoneTimeRow
@@ -89,6 +332,7 @@ export function TimezoneTimeList({
             onUpdateLabel={onUpdateLabel ? (label: string) => onUpdateLabel(timezone.id, label) : undefined}
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
+            onClick={handleTimeScaleClick}
             onDragStart={handleDragStart(index)}
             onDragOver={handleDragOver(index)}
             onDrop={handleDrop(index)}
@@ -96,8 +340,122 @@ export function TimezoneTimeList({
             isDragging={draggedIndex === index}
             dragOver={dragOverIndex === index}
             rowIndex={index}
+            timeScaleRef={index === 0 ? firstTimeScaleRef : undefined}
           />
         ))}
+        {/* Vertical highlight overlay */}
+        {overlayStyle && hoverPosition !== null && !isSelecting && (
+          <div
+            className="absolute pointer-events-none z-10 border-2 border-primary opacity-50 rounded-md"
+            style={{
+              left: `${overlayStyle.left}px`,
+              width: `${overlayStyle.width}px`,
+              top: `${overlayStyle.top}px`,
+              height: `${overlayStyle.height}px`,
+            }}
+          />
+        )}
+        
+        {/* Full screen overlay when selecting */}
+        {isSelecting && selectionStyle && (
+          <>
+            {/* Semi-transparent overlay covering all timescales - left part */}
+            {selectionStyle.left > selectionStyle.timescaleAreaLeft && (
+              <div
+                className="absolute bg-black opacity-60 z-20 cursor-pointer"
+                style={{
+                  left: `${selectionStyle.timescaleAreaLeft}px`,
+                  width: `${selectionStyle.left - selectionStyle.timescaleAreaLeft}px`,
+                  top: `${selectionStyle.top}px`,
+                  height: `${selectionStyle.height}px`,
+                }}
+                onClick={() => {
+                  // Don't cancel if we just finished dragging
+                  if (!isDraggingRef.current) {
+                    setIsSelecting(false);
+                    setStartPosition(null);
+                    setEndPosition(null);
+                    setDraggingBorder(null);
+                  }
+                }}
+              />
+            )}
+            
+            {/* Semi-transparent overlay covering all timescales - right part */}
+            {selectionStyle.left + selectionStyle.width < selectionStyle.timescaleAreaLeft + selectionStyle.timescaleAreaWidth && (
+              <div
+                className="absolute bg-black opacity-60 z-20 cursor-pointer"
+                style={{
+                  left: `${selectionStyle.left + selectionStyle.width}px`,
+                  width: `${(selectionStyle.timescaleAreaLeft + selectionStyle.timescaleAreaWidth) - (selectionStyle.left + selectionStyle.width)}px`,
+                  top: `${selectionStyle.top}px`,
+                  height: `${selectionStyle.height}px`,
+                }}
+                onClick={() => {
+                  // Don't cancel if we just finished dragging
+                  if (!isDraggingRef.current) {
+                    setIsSelecting(false);
+                    setStartPosition(null);
+                    setEndPosition(null);
+                    setDraggingBorder(null);
+                  }
+                }}
+              />
+            )}
+            
+            {/* Selection area - transparent background with highlighted borders */}
+            <div
+              className="absolute z-30 rounded-md cursor-pointer"
+              style={{
+                left: `${selectionStyle.left}px`,
+                width: `${selectionStyle.width}px`,
+                top: `${selectionStyle.top}px`,
+                height: `${selectionStyle.height}px`,
+                backgroundColor: 'transparent',
+              }}
+              onClick={(e) => {
+                // Don't cancel if we just finished dragging or clicking on borders
+                const target = e.target as HTMLElement;
+                if (!target.closest('[data-draggable-border]') && !isDraggingRef.current) {
+                  setIsSelecting(false);
+                  setStartPosition(null);
+                  setEndPosition(null);
+                  setDraggingBorder(null);
+                }
+              }}
+            >
+              {/* Left draggable border */}
+              <div
+                data-draggable-border="left"
+                className="absolute top-0 bottom-0 bg-primary cursor-ew-resize hover:opacity-80 z-40 transition-opacity"
+                style={{
+                  left: '0px',
+                  width: '2px',
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  isDraggingRef.current = true;
+                  setDraggingBorder('left');
+                }}
+              />
+              
+              {/* Right draggable border */}
+              <div
+                data-draggable-border="right"
+                className="absolute top-0 bottom-0 bg-primary cursor-ew-resize hover:opacity-80 z-40 transition-opacity"
+                style={{
+                  right: '0px',
+                  width: '2px',
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  isDraggingRef.current = true;
+                  setDraggingBorder('right');
+                }}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ interface TimezoneTimeRowProps {
   onUpdateLabel?: (label: string) => void;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
+  onClick?: (position: number) => void;
   onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
@@ -20,6 +21,7 @@ interface TimezoneTimeRowProps {
   dragOver?: boolean;
   rowIndex: number;
   onRowDragEnd?: () => void;
+  timeScaleRef?: React.RefObject<HTMLDivElement>;
 }
 
 export function TimezoneTimeRow({
@@ -32,6 +34,7 @@ export function TimezoneTimeRow({
   onUpdateLabel,
   onMouseMove,
   onMouseLeave,
+  onClick,
   onDragStart,
   onDragOver,
   onDrop,
@@ -39,6 +42,7 @@ export function TimezoneTimeRow({
   dragOver,
   rowIndex,
   onRowDragEnd,
+  timeScaleRef,
 }: TimezoneTimeRowProps) {
   // 单数行（index 0, 2, 4...）白色，双数行（index 1, 3, 5...）浅灰色
   const bgColor = rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
@@ -60,7 +64,7 @@ export function TimezoneTimeRow({
         onDragOver={onDragOver}
         onDrop={onDrop}
       />
-      <div className="relative overflow-x-visible overflow-y-visible min-w-0">
+      <div ref={timeScaleRef} className="relative overflow-x-visible overflow-y-visible min-w-0">
         <TimeScale
           config={config}
           timezone={timezone.timezone}
@@ -69,6 +73,7 @@ export function TimezoneTimeRow({
           hoverPosition={hoverPosition}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
+          onClick={onClick}
           rowIndex={rowIndex}
         />
       </div>

@@ -56,3 +56,12 @@ worldtimeboy/
 - Vite
 - date-fns-tz
 - Chrome Extension Manifest V3
+
+## Version
+
+1.0.0
+
+## Credits
+
+- Developed by Cursor
+- Inspired by [WorldTimeBuddy](https://www.worldtimebuddy.com/)
