@@ -63,5 +63,5 @@ worldtimeboy/
 
 ## Credits
 
-- Developed by Cursor
+- Developed with AI assistance using Cursor
 - Inspired by [WorldTimeBuddy](https://www.worldtimebuddy.com/)
