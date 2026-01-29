@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Home, X } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
-import { TimezoneWithOffset, TimeRange } from '../types';
+import { TimezoneWithOffset } from '../types';
 import { getTimezoneAbbreviation } from '../utils/timezone';
 
 interface TimezoneInfoProps {
   timezone: TimezoneWithOffset;
-  selectedRange: TimeRange | null;
   hourFormat: '12' | '24';
   onRemove: () => void;
   onSetHome?: () => void;
@@ -20,7 +19,6 @@ interface TimezoneInfoProps {
 
 export function TimezoneInfo({
   timezone,
-  selectedRange,
   hourFormat,
   onRemove,
   onSetHome,
@@ -46,16 +44,11 @@ export function TimezoneInfo({
     return { time: timeStr, ampm: null };
   };
 
-  const displayTime = selectedRange
-    ? `${String(selectedRange.startHour).padStart(2, '0')}:00 - ${String(selectedRange.endHour).padStart(2, '0')}:00`
-    : timezone.formattedTime;
-  
+  const displayTime = timezone.formattedTime;
   const { time: displayTimeValue, ampm } = parseTimeDisplay(displayTime);
 
   // Format date as "Thu, Jan 29"
-  const formattedDateStr = !selectedRange
-    ? formatInTimeZone(timezone.currentTime, timezone.timezone, 'EEE, MMM d')
-    : '';
+  const formattedDateStr = formatInTimeZone(timezone.currentTime, timezone.timezone, 'EEE, MMM d');
 
   // Get default label (use custom label or timezone abbreviation)
   const defaultLabel = timezone.label || getTimezoneAbbreviation(timezone.timezone, timezone.currentTime);
@@ -159,22 +152,12 @@ export function TimezoneInfo({
 
       {/* Third column: Time and date */}
       <div className="flex flex-col items-end justify-center">
-        {selectedRange ? (
-          <>
-            <div className="text-sm font-bold text-black">
-              {String(selectedRange.startHour).padStart(2, '0')}:00 - {String(selectedRange.endHour).padStart(2, '0')}:00
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5">
-              <span>{displayTimeValue}</span>
-              {ampm && <span className="text-[10px] font-normal">{ampm}</span>}
-            </div>
-            {formattedDateStr && (
-              <div className="text-[10px] text-gray-500 leading-tight">{formattedDateStr}</div>
-            )}
-          </>
+        <div className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5">
+          <span>{displayTimeValue}</span>
+          {ampm && <span className="text-[10px] font-normal">{ampm}</span>}
+        </div>
+        {formattedDateStr && (
+          <div className="text-[10px] text-gray-500 leading-tight">{formattedDateStr}</div>
         )}
       </div>
     </div>

@@ -13,26 +13,9 @@ export function Popup() {
   const timeScaleConfigs = useTimeScale(currentTimes, currentDate);
   const {
     hoverPosition,
-    isSelecting,
-    selectedRange,
     handleMouseMove,
     handleMouseLeave,
-    handleClick,
-    handleDrag,
-    handleCancelSelection,
   } = useTimeSelector();
-
-  const handleMouseMoveWrapper = (position: number) => {
-    handleMouseMove(position);
-  };
-
-  const handleClickWrapper = (actualHour: number) => {
-    handleClick(actualHour);
-  };
-
-  const handleDragWrapper = (actualHour: number) => {
-    handleDrag(actualHour);
-  };
 
   const handleToggleHourFormat = (format: '12' | '24') => {
     updatePreferences({ hourFormat: format });
@@ -80,18 +63,13 @@ export function Popup() {
           timezones={currentTimes}
           timeScaleConfigs={timeScaleConfigs}
           hoverPosition={hoverPosition}
-          isSelecting={isSelecting}
-          selectedRange={selectedRange}
           hourFormat={currentFormat}
           onRemove={removeTimezone}
           onSetHome={setHomeTimezone}
           onUpdateLabel={updateTimezoneLabel}
           onReorder={reorderTimezones}
-          onMouseMove={handleMouseMoveWrapper}
+          onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          onClick={handleClickWrapper}
-          onDrag={handleDragWrapper}
-          onCancelSelection={handleCancelSelection}
         />
       </main>
     </div>

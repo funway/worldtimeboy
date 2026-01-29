@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TimezoneWithOffset, TimeRange } from '../types';
+import { TimezoneWithOffset } from '../types';
 import { TimeScaleConfig } from '../types';
 import { TimezoneTimeRow } from './TimezoneTimeRow';
 
@@ -7,8 +7,6 @@ interface TimezoneTimeListProps {
   timezones: TimezoneWithOffset[];
   timeScaleConfigs: Array<{ timezone: TimezoneWithOffset; config: TimeScaleConfig }>;
   hoverPosition: number | null;
-  isSelecting: boolean;
-  selectedRange: TimeRange | null;
   hourFormat: '12' | '24';
   onRemove: (timezoneId: string) => void;
   onSetHome: (timezoneId: string) => void;
@@ -16,19 +14,13 @@ interface TimezoneTimeListProps {
   onReorder: (timezoneIds: string[]) => void;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
-  onClick: (actualHour: number) => void;
-  onDrag: (actualHour: number) => void;
-  onCancelSelection: () => void;
 }
 
-import { getHourAtPosition } from '../utils/timeScale';
 
 export function TimezoneTimeList({
   timezones,
   timeScaleConfigs,
   hoverPosition,
-  isSelecting,
-  selectedRange,
   hourFormat,
   onRemove,
   onSetHome,
@@ -36,9 +28,6 @@ export function TimezoneTimeList({
   onReorder,
   onMouseMove,
   onMouseLeave,
-  onClick,
-  onDrag,
-  onCancelSelection,
 }: TimezoneTimeListProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -80,7 +69,7 @@ export function TimezoneTimeList({
     setDragOverIndex(null);
   };
 
-  const handleDragEnd = () => {
+  const handleRowDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
@@ -94,35 +83,22 @@ export function TimezoneTimeList({
             timezone={timezone}
             config={config}
             hoverPosition={hoverPosition}
-            isSelecting={isSelecting}
-            selectedRange={selectedRange}
             hourFormat={hourFormat}
             onRemove={() => onRemove(timezone.id)}
             onSetHome={() => onSetHome(timezone.id)}
             onUpdateLabel={onUpdateLabel ? (label: string) => onUpdateLabel(timezone.id, label) : undefined}
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
-            onClick={(position) => {
-              const actualHour = getHourAtPosition(position, config.startHour);
-              onClick(actualHour);
-            }}
-            onDrag={(position) => {
-              const actualHour = getHourAtPosition(position, config.startHour);
-              onDrag(actualHour);
-            }}
-            onDragEnd={handleDragEnd}
             onDragStart={handleDragStart(index)}
             onDragOver={handleDragOver(index)}
             onDrop={handleDrop(index)}
+            onRowDragEnd={handleRowDragEnd}
             isDragging={draggedIndex === index}
             dragOver={dragOverIndex === index}
             rowIndex={index}
           />
         ))}
       </div>
-      {isSelecting && (
-        <div className="absolute inset-0 bg-black/30 z-[5] pointer-events-auto" onClick={onCancelSelection} />
-      )}
     </div>
   );
 }

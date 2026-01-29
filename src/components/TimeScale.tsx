@@ -8,13 +8,8 @@ interface TimeScaleProps {
   currentTime: Date;
   hourFormat: '12' | '24';
   hoverPosition: number | null;
-  isSelecting: boolean;
-  selectedRange: { startHour: number; endHour: number } | null;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
-  onClick: (hour: number) => void;
-  onDrag: (hour: number) => void;
-  onDragEnd: () => void;
   rowIndex: number;
 }
 
@@ -26,9 +21,6 @@ export function TimeScale({
   hoverPosition,
   onMouseMove,
   onMouseLeave,
-  onClick,
-  onDrag,
-  onDragEnd,
 }: TimeScaleProps) {
   const { startHour, dateMarkers } = config;
   const positions = Array.from({ length: 24 }, (_, i) => i);
@@ -96,51 +88,11 @@ export function TimeScale({
     onMouseMove(position);
   };
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const position = Math.floor((x / rect.width) * 24);
-    const actualHour = getHourAtPosition(position, startHour);
-    onClick(actualHour);
-    
-    let isDragging = false;
-    
-    const handleMouseMoveDrag = (e: MouseEvent) => {
-      isDragging = true;
-      e.preventDefault();
-      // Find the time-scale element under the cursor
-      const element = document.elementFromPoint(e.clientX, e.clientY);
-      const timeScale = element?.closest('.time-scale') as HTMLElement;
-      if (!timeScale) return;
-      const timeScaleRect = timeScale.getBoundingClientRect();
-      const x = e.clientX - timeScaleRect.left;
-      const position = Math.floor((x / timeScaleRect.width) * 24);
-      // Get startHour from the time-scale's data attribute or calculate it
-      // For now, we'll use the current startHour, but this might need adjustment
-      const actualHour = getHourAtPosition(position, startHour);
-      onDrag(actualHour);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener('mousemove', handleMouseMoveDrag);
-      document.removeEventListener('mouseup', handleMouseUp);
-      if (isDragging) {
-        onDragEnd();
-      }
-    };
-
-    document.addEventListener('mousemove', handleMouseMoveDrag);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
   return (
     <div 
       className="time-scale relative w-full h-full px-2 flex items-center cursor-default"
       onMouseMove={handleMouseMove}
       onMouseLeave={onMouseLeave}
-      onMouseDown={handleMouseDown}
     >
       {positions.map((position) => {
         const actualHour = getHourAtPosition(position, startHour);
@@ -198,7 +150,7 @@ export function TimeScale({
                   return (
                     <>
                       <span className="text-[10px] font-medium leading-tight">{hour}</span>
-                      <span className="text-[10px] font-normal leading-tight">{ampm}</span>
+                      <span className="text-[8px] font-normal leading-tight">{ampm}</span>
                     </>
                   );
                 })()

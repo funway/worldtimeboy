@@ -18,8 +18,10 @@ export interface TimezoneWithOffset extends Timezone {
 export interface TimeRange {
   startTime: Date;
   endTime: Date;
-  startHour: number; // 0-23
-  endHour: number; // 0-23
+  startHour: number; // 0-23 (for home timezone reference)
+  endHour: number; // 0-23 (for home timezone reference)
+  startPosition: number; // 0-23, position in the time scale
+  endPosition: number; // 0-23, position in the time scale
 }
 
 export interface UserPreferences {
