@@ -5,7 +5,8 @@ import { getTimezoneOffset } from '../utils/timeScale';
 
 export function useCurrentTime(
   timezones: Timezone[],
-  preferences: UserPreferences | null
+  preferences: UserPreferences | null,
+  customTime?: Date | null
 ) {
   const [currentTimes, setCurrentTimes] = useState<TimezoneWithOffset[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -17,7 +18,7 @@ export function useCurrentTime(
     }
 
     const updateTimes = () => {
-      const now = new Date();
+      const now = customTime || new Date();
       setCurrentDate(now);
       
       // Find home timezone, or use first one as fallback
@@ -55,10 +56,13 @@ export function useCurrentTime(
     };
 
     updateTimes();
-    const interval = setInterval(updateTimes, 1000);
-
-    return () => clearInterval(interval);
-  }, [timezones, preferences]);
+    
+    // Only set up interval if not using custom time
+    if (!customTime) {
+      const interval = setInterval(updateTimes, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timezones, preferences, customTime]);
 
   return { currentTimes, currentDate };
 }

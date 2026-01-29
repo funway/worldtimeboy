@@ -15,6 +15,7 @@ interface TimezoneInfoProps {
   onDragStart?: () => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  isCustomTime?: boolean;
 }
 
 export function TimezoneInfo({
@@ -28,6 +29,7 @@ export function TimezoneInfo({
   onDragStart,
   onDragOver,
   onDrop,
+  isCustomTime = false,
 }: TimezoneInfoProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState('');
@@ -155,14 +157,18 @@ export function TimezoneInfo({
       {/* Third column: Time and date */}
       <div className="flex flex-col items-end justify-center min-w-0 max-w-[140px] overflow-hidden">
         <div 
-          className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5 truncate w-full justify-end"
+          className={`text-sm font-bold leading-tight flex items-baseline gap-0.5 truncate w-full justify-end transition-colors ${
+            isCustomTime ? 'text-primary' : 'text-black'
+          }`}
           title={`${displayTimeValue}${ampm ? ` ${ampm}` : ''}`}
         >
           <span className="truncate">{displayTimeValue}</span>
           {ampm && <span className="text-[10px] font-normal flex-shrink-0">{ampm}</span>}
         </div>
         {formattedDateStr && (
-          <div className="text-[10px] text-gray-500 leading-tight truncate w-full text-right" title={formattedDateStr}>
+          <div className={`text-[10px] leading-tight truncate w-full text-right transition-colors ${
+            isCustomTime ? 'text-primary/70' : 'text-gray-500'
+          }`} title={formattedDateStr}>
             {formattedDateStr}
           </div>
         )}

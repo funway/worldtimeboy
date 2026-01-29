@@ -1,12 +1,67 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { searchTimezones } from '../utils/timezone';
+import { parseTimeString, isTimeString } from '../utils/timeParser';
+import { utcToZonedTime } from 'date-fns-tz';
+
+/**
+ * Create a UTC Date object from a time in a specific timezone
+ * Uses iterative approach to find the correct UTC time
+ */
+function createDateInTimezone(
+  year: number,
+  month: number,
+  day: number,
+  hour: number,
+  minute: number,
+  timezone: string
+): Date {
+  // Validate inputs
+  if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute)) {
+    return new Date(); // Return current time if invalid
+  }
+  
+  // Start with a guess: UTC time with the same components
+  let utcDate = new Date(Date.UTC(year, month, day, hour, minute, 0));
+  
+  // Check if date is valid
+  if (isNaN(utcDate.getTime())) {
+    return new Date(); // Return current time if invalid
+  }
+  
+  // Iterate to find the correct UTC time
+  // Check what this UTC time shows in the target timezone
+  for (let i = 0; i < 5; i++) {
+    const zoned = utcToZonedTime(utcDate, timezone);
+    const diffHours = hour - zoned.getHours();
+    const diffMinutes = minute - zoned.getMinutes();
+    
+    // If match, we're done
+    if (diffHours === 0 && diffMinutes === 0) {
+      break;
+    }
+    
+    // Adjust UTC date by the difference
+    const newUtcDate = new Date(utcDate.getTime() + (diffHours * 60 + diffMinutes) * 60 * 1000);
+    
+    // Check if new date is valid
+    if (isNaN(newUtcDate.getTime())) {
+      break;
+    }
+    
+    utcDate = newUtcDate;
+  }
+  
+  return utcDate;
+}
 
 interface TimezoneSearchProps {
   onAddTimezone: (timezoneId: string) => void;
+  homeTimezone?: string;
+  onTimeChange?: (time: Date | null) => void;
 }
 
-export function TimezoneSearch({ onAddTimezone }: TimezoneSearchProps) {
+export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: TimezoneSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Array<{ id: string; name: string; timezone: string }>>([]);
   const [showResults, setShowResults] = useState(false);
@@ -16,17 +71,56 @@ export function TimezoneSearch({ onAddTimezone }: TimezoneSearchProps) {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (query.trim()) {
-      const searchResults = searchTimezones(query);
-      setResults(searchResults);
-      setShowResults(true);
-      setSelectedIndex(-1);
-    } else {
+    const trimmedQuery = query.trim();
+    
+    if (!trimmedQuery) {
       setResults([]);
       setShowResults(false);
       setSelectedIndex(-1);
+      // Clear custom time when query is empty
+      if (onTimeChange) {
+        onTimeChange(null);
+      }
+      return;
     }
-  }, [query]);
+
+    // Check if input is a time string
+    if (isTimeString(trimmedQuery) && homeTimezone && onTimeChange) {
+      const parsedTime = parseTimeString(trimmedQuery);
+      if (parsedTime) {
+        // Get current date in home timezone to preserve date
+        const now = new Date();
+        const zonedNow = utcToZonedTime(now, homeTimezone);
+        
+        // Create date components in home timezone
+        const year = zonedNow.getFullYear();
+        const month = zonedNow.getMonth();
+        const day = zonedNow.getDate();
+        const hour = parsedTime.hour;
+        const minute = parsedTime.minute;
+        
+        // Create UTC date from timezone-specific time
+        const utcDate = createDateInTimezone(year, month, day, hour, minute, homeTimezone);
+        onTimeChange(utcDate);
+      }
+      
+      // Don't show timezone search results when input is a time
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    // Otherwise, search for timezones
+    const searchResults = searchTimezones(trimmedQuery);
+    setResults(searchResults);
+    setShowResults(true);
+    setSelectedIndex(-1);
+    
+    // Clear custom time when searching for timezones
+    if (onTimeChange) {
+      onTimeChange(null);
+    }
+  }, [query, homeTimezone, onTimeChange]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

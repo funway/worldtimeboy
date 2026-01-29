@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTimezones } from '../hooks/useTimezones';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { useTimeScale } from '../hooks/useTimeScale';
@@ -9,8 +10,12 @@ import { TimezoneSearch } from '../components/TimezoneSearch';
 export function Popup() {
   const { timezones, addTimezone, removeTimezone, reorderTimezones, setHomeTimezone, updateTimezoneLabel } = useTimezones();
   const { preferences, updatePreferences } = useStorage();
-  const { currentTimes, currentDate } = useCurrentTime(timezones, preferences);
+  const [customTime, setCustomTime] = useState<Date | null>(null);
+  const { currentTimes, currentDate } = useCurrentTime(timezones, preferences, customTime);
   const timeScaleConfigs = useTimeScale(currentTimes, currentDate);
+  
+  // Find home timezone
+  const homeTimezone = timezones.find(tz => tz.isHome)?.timezone;
   const {
     hoverPosition,
     handleMouseMove,
@@ -27,9 +32,16 @@ export function Popup() {
     <div className="w-[800px] max-h-[600px] flex flex-col font-sans antialiased">
       
       <header className="grid grid-cols-[auto_1fr_auto] items-center px-4 py-3 border-b border-gray-200 bg-white gap-3">
-        <h1 className="text-lg font-semibold text-primary m-0 whitespace-nowrap">worldtimeboy</h1>
+        <h1 className="text-lg m-0 whitespace-nowrap flex items-baseline">
+          <span className="font-bold text-primary" style={{ fontFamily: '"Comic Sans MS", "Marker Felt", "Chalkboard", "Segoe Print", cursive' }}>worldtime</span>
+          <span className="font-light text-primary">boy</span>
+        </h1>
         <div className="flex justify-center">
-          <TimezoneSearch onAddTimezone={addTimezone} />
+          <TimezoneSearch 
+            onAddTimezone={addTimezone}
+            homeTimezone={homeTimezone}
+            onTimeChange={setCustomTime}
+          />
         </div>
         <div className="flex items-center border border-gray-300 rounded overflow-hidden">
           <button
@@ -70,6 +82,7 @@ export function Popup() {
           onReorder={reorderTimezones}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          isCustomTime={customTime !== null}
         />
       </main>
     </div>

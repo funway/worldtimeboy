@@ -22,6 +22,7 @@ interface TimezoneTimeRowProps {
   rowIndex: number;
   onRowDragEnd?: () => void;
   timeScaleRef?: React.RefObject<HTMLDivElement>;
+  isCustomTime?: boolean;
 }
 
 export function TimezoneTimeRow({
@@ -43,6 +44,7 @@ export function TimezoneTimeRow({
   rowIndex,
   onRowDragEnd,
   timeScaleRef,
+  isCustomTime = false,
 }: TimezoneTimeRowProps) {
   // 单数行（index 0, 2, 4...）白色，双数行（index 1, 3, 5...）浅灰色
   const bgColor = rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
@@ -63,6 +65,7 @@ export function TimezoneTimeRow({
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDrop={onDrop}
+        isCustomTime={isCustomTime}
       />
       <div ref={timeScaleRef} className="relative overflow-x-visible overflow-y-visible min-w-0">
         <TimeScale

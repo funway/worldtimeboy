@@ -14,6 +14,7 @@ interface TimezoneTimeListProps {
   onReorder: (timezoneIds: string[]) => void;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
+  isCustomTime?: boolean;
 }
 
 
@@ -28,6 +29,7 @@ export function TimezoneTimeList({
   onReorder,
   onMouseMove,
   onMouseLeave,
+  isCustomTime = false,
 }: TimezoneTimeListProps) {
   // All state hooks first
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -341,6 +343,7 @@ export function TimezoneTimeList({
             dragOver={dragOverIndex === index}
             rowIndex={index}
             timeScaleRef={index === 0 ? firstTimeScaleRef : undefined}
+            isCustomTime={isCustomTime}
           />
         ))}
         {/* Vertical highlight overlay */}
