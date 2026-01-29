@@ -9,8 +9,10 @@ interface TimezoneTimeRowProps {
   hoverPosition: number | null;
   isSelecting: boolean;
   selectedRange: TimeRange | null;
+  hourFormat: '12' | '24';
   onRemove: () => void;
   onSetHome?: () => void;
+  onUpdateLabel?: (label: string) => void;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
   onClick: (actualHour: number) => void;
@@ -30,8 +32,10 @@ export function TimezoneTimeRow({
   hoverPosition,
   isSelecting,
   selectedRange,
+  hourFormat,
   onRemove,
   onSetHome,
+  onUpdateLabel,
   onMouseMove,
   onMouseLeave,
   onClick,
@@ -48,12 +52,14 @@ export function TimezoneTimeRow({
   const bgColor = rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50';
   
   return (
-    <div className={`grid grid-cols-[25%_75%] relative ${bgColor} transition-colors`}>
+    <div className={`grid grid-cols-[20%_80%] relative ${bgColor} transition-colors`}>
       <TimezoneInfo
         timezone={timezone}
         selectedRange={selectedRange}
+        hourFormat={hourFormat}
         onRemove={onRemove}
         onSetHome={onSetHome}
+        onUpdateLabel={onUpdateLabel}
         isDragging={isDragging}
         dragOver={dragOver}
         onDragStart={onDragStart}
@@ -65,6 +71,7 @@ export function TimezoneTimeRow({
           config={config}
           timezone={timezone.timezone}
           currentTime={timezone.currentTime}
+          hourFormat={hourFormat}
           hoverPosition={hoverPosition}
           isSelecting={isSelecting}
           selectedRange={selectedRange ? { startHour: selectedRange.startHour, endHour: selectedRange.endHour } : null}

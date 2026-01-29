@@ -9,8 +9,10 @@ interface TimezoneTimeListProps {
   hoverPosition: number | null;
   isSelecting: boolean;
   selectedRange: TimeRange | null;
+  hourFormat: '12' | '24';
   onRemove: (timezoneId: string) => void;
   onSetHome: (timezoneId: string) => void;
+  onUpdateLabel?: (timezoneId: string, label: string) => void;
   onReorder: (timezoneIds: string[]) => void;
   onMouseMove: (position: number) => void;
   onMouseLeave: () => void;
@@ -27,8 +29,10 @@ export function TimezoneTimeList({
   hoverPosition,
   isSelecting,
   selectedRange,
+  hourFormat,
   onRemove,
   onSetHome,
+  onUpdateLabel,
   onReorder,
   onMouseMove,
   onMouseLeave,
@@ -92,8 +96,10 @@ export function TimezoneTimeList({
             hoverPosition={hoverPosition}
             isSelecting={isSelecting}
             selectedRange={selectedRange}
+            hourFormat={hourFormat}
             onRemove={() => onRemove(timezone.id)}
             onSetHome={() => onSetHome(timezone.id)}
+            onUpdateLabel={onUpdateLabel ? (label: string) => onUpdateLabel(timezone.id, label) : undefined}
             onMouseMove={onMouseMove}
             onMouseLeave={onMouseLeave}
             onClick={(position) => {

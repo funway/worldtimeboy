@@ -2,6 +2,7 @@ export interface Timezone {
   id: string;
   name: string;
   timezone: string; // IANA timezone ID, e.g., "Asia/Shanghai"
+  label?: string; // Custom timezone abbreviation label (e.g., "HKT", "PKT", "PST")
   isHome?: boolean; // Whether this is the home timezone
   order?: number; // Order index for sorting
 }
@@ -23,9 +24,6 @@ export interface TimeRange {
 
 export interface UserPreferences {
   hourFormat: '12' | '24';
-  dateFormat: string;
-  dayTimeColor?: string; // Background color for day time (8-18)
-  nightTimeColor?: string; // Background color for night time (19-7)
 }
 
 export interface TimeScaleConfig {

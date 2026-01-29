@@ -34,6 +34,12 @@ export function useTimezones() {
     await refresh();
   }
 
+  // Update timezone label
+  async function updateTimezoneLabel(timezoneId: string, label: string) {
+    await storage.updateTimezoneLabel(timezoneId, label);
+    await refresh();
+  }
+
   return {
     timezones,
     loading,
@@ -41,5 +47,6 @@ export function useTimezones() {
     removeTimezone,
     reorderTimezones,
     setHomeTimezone,
+    updateTimezoneLabel,
   };
 }

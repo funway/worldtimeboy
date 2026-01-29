@@ -114,13 +114,23 @@ export async function removeTimezone(timezoneId: string): Promise<void> {
   }
 }
 
+export async function updateTimezoneLabel(timezoneId: string, label: string): Promise<void> {
+  const timezones = await getTimezones();
+  const updated = timezones.map(tz => {
+    if (tz.id === timezoneId) {
+      return { ...tz, label };
+    }
+    return tz;
+  });
+  await saveTimezones(updated);
+}
+
 export async function getPreferences(): Promise<UserPreferences> {
   return new Promise((resolve) => {
     chrome.storage.local.get([STORAGE_KEYS.PREFERENCES], (result) => {
       resolve(
         result[STORAGE_KEYS.PREFERENCES] || {
           hourFormat: '24',
-          dateFormat: 'YYYY-MM-DD',
         }
       );
     });

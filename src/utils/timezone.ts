@@ -114,3 +114,14 @@ export function searchTimezones(query: string): Array<{ id: string; name: string
 export function getUserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
+
+// Get timezone abbreviation using Intl.DateTimeFormat
+export function getTimezoneAbbreviation(timezone: string, date: Date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    timeZoneName: 'short'
+  });
+  const parts = formatter.formatToParts(date);
+  const tzNamePart = parts.find(part => part.type === 'timeZoneName');
+  return tzNamePart?.value || '';
+}

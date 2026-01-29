@@ -1,12 +1,16 @@
+import { useState, useRef, useEffect } from 'react';
 import { Home, X } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { TimezoneWithOffset, TimeRange } from '../types';
+import { getTimezoneAbbreviation } from '../utils/timezone';
 
 interface TimezoneInfoProps {
   timezone: TimezoneWithOffset;
   selectedRange: TimeRange | null;
+  hourFormat: '12' | '24';
   onRemove: () => void;
   onSetHome?: () => void;
+  onUpdateLabel?: (label: string) => void;
   isDragging?: boolean;
   dragOver?: boolean;
   onDragStart?: () => void;
@@ -14,86 +18,81 @@ interface TimezoneInfoProps {
   onDrop?: (e: React.DragEvent) => void;
 }
 
-// Calculate UTC offset in hours
-function getUTCOffset(timezone: string, date: Date = new Date()): number {
-  // Format the date in UTC and the target timezone
-  const utcFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  
-  const tzFormatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  });
-  
-  const utcParts = utcFormatter.formatToParts(date);
-  const tzParts = tzFormatter.formatToParts(date);
-  
-  // Extract time components
-  const getValue = (parts: Intl.DateTimeFormatPart[], type: string) => 
-    parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-  
-  // Get full date-time components
-  const utcYear = getValue(utcParts, 'year');
-  const utcMonth = getValue(utcParts, 'month');
-  const utcDay = getValue(utcParts, 'day');
-  const utcHour = getValue(utcParts, 'hour');
-  const utcMinute = getValue(utcParts, 'minute');
-  
-  const tzYear = getValue(tzParts, 'year');
-  const tzMonth = getValue(tzParts, 'month');
-  const tzDay = getValue(tzParts, 'day');
-  const tzHour = getValue(tzParts, 'hour');
-  const tzMinute = getValue(tzParts, 'minute');
-  
-  // Create Date objects representing the same moment
-  // Parse as if they were UTC times
-  const utcTime = Date.UTC(utcYear, utcMonth - 1, utcDay, utcHour, utcMinute);
-  const tzTime = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMinute);
-  
-  // The difference gives us the offset in milliseconds, convert to hours
-  return (tzTime - utcTime) / (1000 * 60 * 60);
-}
-
-// Format UTC offset as UTC+N or UTC-N
-function formatUTCOffset(offset: number): string {
-  const sign = offset >= 0 ? '+' : '';
-  return `UTC${sign}${Math.round(offset)}`;
-}
-
 export function TimezoneInfo({
   timezone,
   selectedRange,
+  hourFormat,
   onRemove,
   onSetHome,
+  onUpdateLabel,
   isDragging,
   dragOver,
   onDragStart,
   onDragOver,
   onDrop,
 }: TimezoneInfoProps) {
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
+  const [labelValue, setLabelValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Parse time string to separate time and am/pm for 12-hour format
+  const parseTimeDisplay = (timeStr: string) => {
+    if (hourFormat === '12' && timeStr.includes(' ')) {
+      const parts = timeStr.split(' ');
+      const time = parts[0];
+      const ampm = parts.slice(1).join(' '); // Handle cases like "AM" or "PM"
+      return { time, ampm };
+    }
+    return { time: timeStr, ampm: null };
+  };
+
   const displayTime = selectedRange
     ? `${String(selectedRange.startHour).padStart(2, '0')}:00 - ${String(selectedRange.endHour).padStart(2, '0')}:00`
     : timezone.formattedTime;
-
-  // Calculate UTC offset
-  const utcOffset = getUTCOffset(timezone.timezone, timezone.currentTime);
   
+  const { time: displayTimeValue, ampm } = parseTimeDisplay(displayTime);
+
   // Format date as "Thu, Jan 29"
   const formattedDateStr = !selectedRange
     ? formatInTimeZone(timezone.currentTime, timezone.timezone, 'EEE, MMM d')
     : '';
+
+  // Get default label (use custom label or timezone abbreviation)
+  const defaultLabel = timezone.label || getTimezoneAbbreviation(timezone.timezone, timezone.currentTime);
+  const displayLabel = timezone.label || defaultLabel;
+
+  // Initialize label value when entering edit mode
+  useEffect(() => {
+    if (isEditingLabel && inputRef.current) {
+      setLabelValue(displayLabel);
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingLabel, displayLabel]);
+
+  const handleLabelClick = (e: React.MouseEvent) => {
+    if (onUpdateLabel && !isDragging) {
+      e.stopPropagation();
+      setIsEditingLabel(true);
+    }
+  };
+
+  const handleLabelBlur = () => {
+    setIsEditingLabel(false);
+    if (onUpdateLabel && labelValue.trim() !== '') {
+      onUpdateLabel(labelValue.trim());
+    }
+  };
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      inputRef.current?.blur();
+    } else if (e.key === 'Escape') {
+      setIsEditingLabel(false);
+      setLabelValue(displayLabel);
+    }
+  };
 
   return (
     <div
@@ -130,10 +129,32 @@ export function TimezoneInfo({
         </button>
       </div>
 
-      {/* Second column: Timezone name with UTC offset below */}
+      {/* Second column: Timezone label (editable) and name */}
       <div className="flex flex-col items-start justify-center">
-        <div className="text-sm font-bold text-black leading-tight">{timezone.name}</div>
-        <div className="text-[10px] text-gray-500 leading-tight">{formatUTCOffset(utcOffset)}</div>
+        {isEditingLabel ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={labelValue}
+            onChange={(e) => setLabelValue(e.target.value)}
+            onBlur={handleLabelBlur}
+            onKeyDown={handleLabelKeyDown}
+            className="text-sm font-bold text-black leading-tight bg-white border border-blue-500 rounded px-1 py-0 w-16 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <div
+            className={`text-sm font-bold text-black leading-tight ${
+              onUpdateLabel ? 'cursor-text hover:bg-blue-100 rounded px-1 -mx-1' : ''
+            }`}
+            onClick={handleLabelClick}
+            title={onUpdateLabel ? 'Click to edit label' : ''}
+          >
+            {displayLabel}
+          </div>
+        )}
+        <div className="text-[10px] text-gray-500 leading-tight">{timezone.name}</div>
       </div>
 
       {/* Third column: Time and date */}
@@ -146,7 +167,10 @@ export function TimezoneInfo({
           </>
         ) : (
           <>
-            <div className="text-sm font-bold text-black leading-tight">{displayTime}</div>
+            <div className="text-sm font-bold text-black leading-tight flex items-baseline gap-0.5">
+              <span>{displayTimeValue}</span>
+              {ampm && <span className="text-[10px] font-normal">{ampm}</span>}
+            </div>
             {formattedDateStr && (
               <div className="text-[10px] text-gray-500 leading-tight">{formattedDateStr}</div>
             )}

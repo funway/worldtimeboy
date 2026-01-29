@@ -6,6 +6,7 @@ interface TimeScaleProps {
   config: TimeScaleConfig;
   timezone: string;
   currentTime: Date;
+  hourFormat: '12' | '24';
   hoverPosition: number | null;
   isSelecting: boolean;
   selectedRange: { startHour: number; endHour: number } | null;
@@ -21,6 +22,7 @@ export function TimeScale({
   config,
   timezone,
   currentTime,
+  hourFormat,
   hoverPosition,
   onMouseMove,
   onMouseLeave,
@@ -30,6 +32,19 @@ export function TimeScale({
 }: TimeScaleProps) {
   const { startHour, dateMarkers } = config;
   const positions = Array.from({ length: 24 }, (_, i) => i);
+
+  // Convert 24-hour format to 12-hour format
+  const convertTo12Hour = (hour24: number): { hour: number; ampm: string } => {
+    if (hour24 === 0) {
+      return { hour: 12, ampm: 'AM' };
+    } else if (hour24 === 12) {
+      return { hour: 12, ampm: 'PM' };
+    } else if (hour24 < 12) {
+      return { hour: hour24, ampm: 'AM' };
+    } else {
+      return { hour: hour24 - 12, ampm: 'PM' };
+    }
+  };
 
   // Find which position (0-23) corresponds to hour 0 in this timezone
   const getDateMarker = (position: number): { month: string; day: string } | null => {
@@ -160,7 +175,7 @@ export function TimeScale({
           >
             {/* h-cell: the inner div with borders and content */}
             <div
-              className={`h-cell w-full flex flex-col items-center justify-center transition-colors ${bgColor} ${
+              className={`h-cell w-full flex flex-col items-center justify-center py-1 transition-colors ${bgColor} ${
                 isZeroHour 
                   ? 'border-l rounded-l-md' 
                   : ''
@@ -171,13 +186,22 @@ export function TimeScale({
                   ? ''
                   : 'border-r border-r-gray-300/30'
               } border-t border-t-gray-300 border-b border-b-gray-300`}
-              style={{ height: '1.5em' }}
             >
               {dateMarker ? (
                 <>
                   <span className="text-[10px] font-semibold leading-tight">{dateMarker.month}</span>
                   <span className="text-[10px] font-semibold leading-tight">{dateMarker.day}</span>
                 </>
+              ) : hourFormat === '12' ? (
+                (() => {
+                  const { hour, ampm } = convertTo12Hour(actualHour);
+                  return (
+                    <>
+                      <span className="text-[10px] font-medium leading-tight">{hour}</span>
+                      <span className="text-[10px] font-normal leading-tight">{ampm}</span>
+                    </>
+                  );
+                })()
               ) : (
                 <span className={`text-sm font-medium`}>
                   {actualHour}

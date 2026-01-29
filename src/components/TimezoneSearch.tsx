@@ -115,7 +115,7 @@ export function TimezoneSearch({ onAddTimezone }: TimezoneSearchProps) {
               onClick={() => handleSelect(result.timezone)}
               onMouseEnter={() => setSelectedIndex(index)}
             >
-              <span className="font-medium text-gray-800">{result.name}</span>
+              <span className="text-sm font-bold text-gray-800">{result.name}</span>
               <span className="text-xs text-gray-500">{result.timezone}</span>
             </div>
           ))}
