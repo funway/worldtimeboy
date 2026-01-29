@@ -40,12 +40,7 @@ npm run build
 1. **查看 Popup 控制台**：
    - 右键点击扩展图标 → "检查弹出内容"
 
-2. **查看 Background Script 控制台**：
-   - 打开 `chrome://extensions/`
-   - 找到你的扩展
-   - 点击"service worker"链接
-
-3. **查看 Storage**：
+2. **查看 Storage**：
    - 在扩展的"检查弹出内容"中打开 DevTools
    - Application → Storage → Local Storage
 

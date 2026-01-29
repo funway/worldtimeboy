@@ -185,7 +185,7 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
         <input
           type="text"
           className="flex-1 border-0 outline-none text-sm"
-          placeholder="Place or timezone"
+          placeholder="Place, timezone or time"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() && setShowResults(true)}
