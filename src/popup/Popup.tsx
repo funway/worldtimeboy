@@ -9,7 +9,7 @@ import { TimezoneSearch } from '../components/TimezoneSearch';
 
 export function Popup() {
   const { timezones, addTimezone, removeTimezone, reorderTimezones, setHomeTimezone, updateTimezoneLabel } = useTimezones();
-  const { preferences, updatePreferences } = useStorage();
+  const { preferences, updatePreferences, loading } = useStorage();
   const [customTime, setCustomTime] = useState<Date | null>(null);
   const { currentTimes, currentDate } = useCurrentTime(timezones, preferences, customTime);
   const timeScaleConfigs = useTimeScale(currentTimes, currentDate);
@@ -44,29 +44,44 @@ export function Popup() {
           />
         </div>
         <div className="flex items-center border border-gray-300 rounded overflow-hidden">
-          <button
-            className={`px-3 py-1 text-sm font-medium transition-colors ${
-              currentFormat === '12'
-                ? 'bg-primary text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            onClick={() => handleToggleHourFormat('12')}
-            title="12-hour format"
-          >
-            12
-          </button>
-          <div className="w-px bg-gray-300"></div>
-          <button
-            className={`px-3 py-1 text-sm font-medium transition-colors ${
-              currentFormat === '24'
-                ? 'bg-primary text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            }`}
-            onClick={() => handleToggleHourFormat('24')}
-            title="24-hour format"
-          >
-            24
-          </button>
+          {loading ? (
+            // Placeholder to maintain layout during loading - invisible but maintains size
+            <>
+              <div className="px-3 py-1 text-sm font-medium invisible">
+                12
+              </div>
+              <div className="w-px bg-gray-300"></div>
+              <div className="px-3 py-1 text-sm font-medium invisible">
+                24
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  currentFormat === '12'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={() => handleToggleHourFormat('12')}
+                title="12-hour format"
+              >
+                12
+              </button>
+              <div className="w-px bg-gray-300"></div>
+              <button
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  currentFormat === '24'
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+                onClick={() => handleToggleHourFormat('24')}
+                title="24-hour format"
+              >
+                24
+              </button>
+            </>
+          )}
         </div>
       </header>
 
