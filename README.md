@@ -65,3 +65,5 @@ worldtimeboy/
 
 - Developed with AI assistance using Cursor
 - Inspired by [WorldTimeBuddy](https://www.worldtimebuddy.com/)
+- Extension icon from [Flaticon](https://www.flaticon.com/)
+- UI icons (SVG) from [Lucide](https://lucide.dev/)
