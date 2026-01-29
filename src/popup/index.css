@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply m-0 font-sans antialiased text-base;
+  }
+
+  #root {
+    @apply w-full h-full;
+  }
+}
