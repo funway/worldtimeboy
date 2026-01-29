@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { searchTimezones } from '../utils/timezone';
 import { parseTimeString, isTimeString } from '../utils/timeParser';
-import { utcToZonedTime } from 'date-fns-tz';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 
 /**
  * Create a UTC Date object from a time in a specific timezone
- * Uses iterative approach to find the correct UTC time
+ * Properly handles timezone conversion using zonedTimeToUtc
  */
 function createDateInTimezone(
   year: number,
@@ -21,36 +21,18 @@ function createDateInTimezone(
     return new Date(); // Return current time if invalid
   }
   
-  // Start with a guess: UTC time with the same components
-  let utcDate = new Date(Date.UTC(year, month, day, hour, minute, 0));
+  // Create a date object in the target timezone
+  // Note: month is 0-indexed in JavaScript Date, so we use it as-is
+  const zonedDate = new Date(year, month, day, hour, minute, 0);
   
   // Check if date is valid
-  if (isNaN(utcDate.getTime())) {
+  if (isNaN(zonedDate.getTime())) {
     return new Date(); // Return current time if invalid
   }
   
-  // Iterate to find the correct UTC time
-  // Check what this UTC time shows in the target timezone
-  for (let i = 0; i < 5; i++) {
-    const zoned = utcToZonedTime(utcDate, timezone);
-    const diffHours = hour - zoned.getHours();
-    const diffMinutes = minute - zoned.getMinutes();
-    
-    // If match, we're done
-    if (diffHours === 0 && diffMinutes === 0) {
-      break;
-    }
-    
-    // Adjust UTC date by the difference
-    const newUtcDate = new Date(utcDate.getTime() + (diffHours * 60 + diffMinutes) * 60 * 1000);
-    
-    // Check if new date is valid
-    if (isNaN(newUtcDate.getTime())) {
-      break;
-    }
-    
-    utcDate = newUtcDate;
-  }
+  // Convert the zoned time to UTC
+  // zonedTimeToUtc treats the input date as if it's in the specified timezone
+  const utcDate = zonedTimeToUtc(zonedDate, timezone);
   
   return utcDate;
 }
