@@ -132,6 +132,7 @@ export function TimeScale({
         const dateMarker = getDateMarker(position);
         const isDay = isDayTime(actualHour);
         const isZeroHour = position === zeroHourPos;
+        const is23Hour = position === hour23Pos;
         const isHovered = hoverPosition === position;
 
         // Determine background color: 0h-cell uses darker night color
@@ -164,10 +165,10 @@ export function TimeScale({
                   ? 'border-l rounded-l-md' 
                   : ''
               } ${
-                position === 23
-                  ? ''
-                  : position === hour23Pos
+                is23Hour
                   ? 'border-r rounded-r-md pr-1'
+                  : position === 23
+                  ? ''
                   : 'border-r border-r-gray-300/30'
               } border-t border-t-gray-300 border-b border-b-gray-300`}
               style={{ height: '1.5em' }}

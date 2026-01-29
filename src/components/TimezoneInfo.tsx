@@ -109,46 +109,46 @@ export function TimezoneInfo({
       <div className="flex flex-col gap-1 items-start">
         {onSetHome && (
           <button
-            className={`bg-transparent border-0 cursor-pointer p-0.5 leading-none flex items-center justify-center transition-all mt-0.5 ${
+            className={`bg-transparent border-0 cursor-pointer p-0 leading-none flex items-center justify-center transition-all ${
               timezone.isHome
-                ? 'text-red-500 disabled:opacity-100 disabled:cursor-not-allowed opacity-100'
+                ? 'text-gray-600 disabled:opacity-100 disabled:cursor-not-allowed opacity-100'
                 : 'text-gray-600 hover:text-primary opacity-0 group-hover:opacity-100'
             }`}
             onClick={onSetHome}
             disabled={timezone.isHome}
             title={timezone.isHome ? 'Home timezone' : 'Set as home timezone'}
           >
-            <Home size={14} />
+            <Home size={12} strokeWidth={timezone.isHome ? 3 : 2} />
           </button>
         )}
         <button
-          className="bg-transparent border-0 text-gray-500 cursor-pointer p-0.5 leading-none flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:text-red-600"
+          className="bg-transparent border-0 text-gray-500 cursor-pointer p-0 leading-none flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:text-red-600"
           onClick={onRemove}
           title="Remove timezone"
         >
-          <X size={14} />
+          <X size={12} />
         </button>
       </div>
 
       {/* Second column: Timezone name with UTC offset below */}
       <div className="flex flex-col items-start justify-center">
-        <div className="text-base font-bold text-black">{timezone.name}</div>
-        <div className="text-xs text-gray-500">{formatUTCOffset(utcOffset)}</div>
+        <div className="text-sm font-bold text-black leading-tight">{timezone.name}</div>
+        <div className="text-[10px] text-gray-500 leading-tight">{formatUTCOffset(utcOffset)}</div>
       </div>
 
       {/* Third column: Time and date */}
       <div className="flex flex-col items-end justify-center">
         {selectedRange ? (
           <>
-            <div className="text-base font-bold text-black">
+            <div className="text-sm font-bold text-black">
               {String(selectedRange.startHour).padStart(2, '0')}:00 - {String(selectedRange.endHour).padStart(2, '0')}:00
             </div>
           </>
         ) : (
           <>
-            <div className="text-base font-bold text-black">{displayTime}</div>
+            <div className="text-sm font-bold text-black leading-tight">{displayTime}</div>
             {formattedDateStr && (
-              <div className="text-xs text-gray-500">{formattedDateStr}</div>
+              <div className="text-[10px] text-gray-500 leading-tight">{formattedDateStr}</div>
             )}
           </>
         )}
