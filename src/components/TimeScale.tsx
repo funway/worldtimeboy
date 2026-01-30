@@ -1,4 +1,3 @@
-import { formatInTimeZone } from 'date-fns-tz';
 import { TimeScaleConfig } from '../types';
 import { getHourAtPosition } from '../utils/timeScale';
 
@@ -16,8 +15,6 @@ interface TimeScaleProps {
 
 export function TimeScale({
   config,
-  timezone,
-  currentTime,
   hourFormat,
   hoverPosition,
   onMouseMove,
@@ -26,6 +23,8 @@ export function TimeScale({
 }: TimeScaleProps) {
   const { startHour, dateMarkers } = config;
   const positions = Array.from({ length: 24 }, (_, i) => i);
+
+  const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   // Convert 24-hour format to 12-hour format
   const convertTo12Hour = (hour24: number): { hour: number; ampm: string } => {
@@ -47,10 +46,11 @@ export function TimeScale({
     if (actualHour === 0) {
       const marker = dateMarkers.find((m) => m.hour === 0);
       if (marker) {
-        // Format date as month abbreviation and day for the current time in this timezone
-        const month = formatInTimeZone(currentTime, timezone, 'MMM');
-        const day = formatInTimeZone(currentTime, timezone, 'd');
-        return { month, day };
+        // marker.date is already the correct date for this timezone's 0h-cell, in "M/d" format
+        const [monthNum, day] = marker.date.split('/');
+        const monthIndex = parseInt(monthNum, 10) - 1;
+        const monthAbbr = MONTH_ABBR[monthIndex] ?? '';
+        return { month: monthAbbr, day };
       }
     }
     return null;

@@ -1,5 +1,5 @@
 import { TimeScaleConfig } from '../types';
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone, zonedTimeToUtc } from 'date-fns-tz';
 
 /**
  * Calculate the offset in hours between two timezones at a given time
@@ -30,39 +30,46 @@ export function calculateTimeScaleConfig(
   referenceTimezone: string,
   date: Date = new Date()
 ): TimeScaleConfig {
-  const offset = getTimezoneOffset(timezone, referenceTimezone, date);
-  
-  // Home timezone starts at 0h
-  if (timezone === referenceTimezone) {
-    return {
-      startHour: 0,
-      dateMarkers: [
-        { hour: 0, date: formatInTimeZone(date, timezone, 'M/d') },
-      ],
-    };
-  }
+  /**
+   * 核心思想：
+   * - 先确定一个共同的基准绝对时间：referenceTimezone 当天 00:00 对应的 UTC 时间（baseTime）
+   * - 对于任意一行：
+   *   - position p 代表的绝对时间是 baseTime + p 小时
+   *   - 该行在该绝对时间下显示的 hour = formatInTimeZone(baseTime + p, timezone, 'H')
+   * - 这样既保证了所有行的“同一列”是同一个绝对时间，也能正确算出 0h-cell 的日期
+   */
 
-  // Calculate start hour (offset from reference)
-  // This is where position 0 in the time scale corresponds to in actual hours
-  let startHour = offset % 24;
-  if (startHour < 0) {
-    startHour += 24;
-  }
-  startHour = Math.floor(startHour);
+  // 1. 计算 referenceTimezone 当天 00:00 对应的 UTC 时间，作为整条 timescale 的 baseTime
+  const refDateStr = formatInTimeZone(date, referenceTimezone, 'yyyy-MM-dd');
+  const [refYear, refMonth, refDay] = refDateStr.split('-').map(Number);
+  const refLocalMidnight = new Date(refYear, refMonth - 1, refDay, 0, 0, 0);
+  const baseTime = zonedTimeToUtc(refLocalMidnight, referenceTimezone);
 
-  // Calculate date markers
-  const dateMarkers: Array<{ hour: number; date: string }> = [];
-  const currentDate = new Date(date);
-  
-  // Get the date for hour 0 in this timezone
-  const hour0Date = formatInTimeZone(currentDate, timezone, 'M/d');
-  dateMarkers.push({
-    hour: 0, // This is the actual hour (0h), not the position
-    date: hour0Date,
-  });
+  // 2. 计算该 timezone 在 baseTime 时刻的 hour，作为 startHour
+  const startHour = parseInt(
+    formatInTimeZone(baseTime, timezone, 'H'),
+    10
+  );
+
+  // 3. 计算该行 0h-cell 落在哪个 position：解 (position + startHour) % 24 === 0
+  const zeroHourPosition = (24 - (startHour % 24) + 24) % 24;
+
+  // 4. 计算该 0h-cell 对应的绝对时间，并在该 timezone 下格式化日期
+  const zeroHourInstant = new Date(
+    baseTime.getTime() + zeroHourPosition * 60 * 60 * 1000
+  );
+
+  const hour0Date = formatInTimeZone(zeroHourInstant, timezone, 'M/d');
+
+  const dateMarkers: Array<{ hour: number; date: string }> = [
+    {
+      hour: 0,
+      date: hour0Date,
+    },
+  ];
 
   return {
-    startHour: startHour,
+    startHour,
     dateMarkers,
   };
 }
