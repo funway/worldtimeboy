@@ -1,6 +1,6 @@
 {
   "name": "worldtimeboy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A Chrome Extension for multi-timezone time display",
   "type": "module",
   "scripts": {
