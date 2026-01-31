@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { searchTimezones } from '../utils/timezone';
 import { parseTimeString, isTimeString } from '../utils/timeParser';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { utcToZonedTime, zonedTimeToUtc, formatInTimeZone } from 'date-fns-tz';
+import { getTimezoneOffset } from '../utils/timeScale';
 
 /**
  * Create a UTC Date object from a time in a specific timezone
@@ -179,22 +180,40 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
           ref={resultsRef}
           className="absolute top-full left-0 right-0 bg-white border border-t-0 border-gray-300 rounded-b max-h-[300px] overflow-y-auto z-[100] shadow-lg"
         >
-          {results.map((result, index) => (
-            <div
-              key={result.id}
-              ref={(el) => (itemRefs.current[index] = el)}
-              className={`px-3 py-2.5 cursor-pointer flex justify-between items-center border-b border-gray-100 transition-colors last:border-b-0 ${
-                selectedIndex === index
-                  ? 'bg-blue-100 hover:bg-blue-100'
-                  : 'hover:bg-gray-50'
-              }`}
-              onClick={() => handleSelect(result.timezone)}
-              onMouseEnter={() => setSelectedIndex(index)}
-            >
-              <span className="text-sm font-bold text-gray-800">{result.name}</span>
-              <span className="text-xs text-gray-500">{result.timezone}</span>
-            </div>
-          ))}
+          {results.map((result, index) => {
+            // Calculate current time for this timezone
+            const now = new Date();
+            const currentTime = formatInTimeZone(now, result.timezone, 'HH:mm');
+            
+            // Calculate UTC offset
+            const utcOffset = getTimezoneOffset(result.timezone, 'Etc/UTC', now);
+            const formattedUtcOffset = utcOffset > 0 ? `+${utcOffset}` : `${utcOffset}`;
+            
+            return (
+              <div
+                key={result.id}
+                ref={(el) => (itemRefs.current[index] = el)}
+                className={`px-3 py-2.5 cursor-pointer flex justify-between items-center border-b border-gray-100 transition-colors last:border-b-0 ${
+                  selectedIndex === index
+                    ? 'bg-blue-100 hover:bg-blue-100'
+                    : 'hover:bg-gray-50'
+                }`}
+                onClick={() => handleSelect(result.timezone)}
+                onMouseEnter={() => setSelectedIndex(index)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-800">{result.name}</span>
+                  <span className="text-xs text-gray-500">{currentTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">{result.timezone}</span>
+                  <span className="text-[9px] text-gray-600 font-mono font-medium leading-none bg-gray-100 rounded px-1 py-1 whitespace-nowrap">
+                    {formattedUtcOffset}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
