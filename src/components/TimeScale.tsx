@@ -93,17 +93,20 @@ export function TimeScale({
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!onClick) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const padding = 8; // px-2
-    const cellAreaWidth = rect.width - (padding * 2);
+    // Read actual padding from computed styles instead of hardcoding
+    const computedStyle = window.getComputedStyle(e.currentTarget);
+    const paddingLeft = parseFloat(computedStyle.paddingLeft);
+    const paddingRight = parseFloat(computedStyle.paddingRight);
+    const cellAreaWidth = rect.width - (paddingLeft + paddingRight);
     const cellWidth = cellAreaWidth / 24;
-    const x = e.clientX - rect.left - padding;
+    const x = e.clientX - rect.left - paddingLeft;
     const position = Math.max(0, Math.min(23, Math.floor(x / cellWidth)));
     onClick(position);
   };
 
   return (
     <div 
-      className="time-scale relative w-full h-full px-2 flex items-center cursor-default"
+      className="time-scale relative w-full h-full px-1 flex items-center cursor-default"
       onMouseMove={handleMouseMove}
       onMouseLeave={onMouseLeave}
       onClick={handleClick}

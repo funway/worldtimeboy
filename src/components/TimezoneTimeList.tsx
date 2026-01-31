@@ -63,6 +63,17 @@ export function TimezoneTimeList({
   const draggingBorderRef = useRef<'left' | 'right' | null>(null);
   const isSelectingRef = useRef(false);
   const isDraggingRef = useRef(false);
+  
+  // Cache for cell dimensions to avoid recalculating on every hover
+  const [cachedDimensions, setCachedDimensions] = useState<{
+    timeScaleRect: DOMRect;
+    containerRect: DOMRect;
+    padding: number;
+    paddingLeft: number;
+    paddingRight: number;
+    cellWidth: number;
+    verticalPadding: number;
+  } | null>(null);
 
   // Helper function to calculate cell dimensions
   // Using useCallback to ensure stable reference
@@ -79,8 +90,13 @@ export function TimezoneTimeList({
     const timeScaleRect = timeScaleElement.getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    const padding = 8; // px-2 = 0.5rem = 8px
-    const cellAreaWidth = timeScaleRect.width - (padding * 2);
+    // Read actual padding from computed styles instead of hardcoding
+    const computedStyle = window.getComputedStyle(timeScaleElement);
+    const paddingLeft = parseFloat(computedStyle.paddingLeft);
+    const paddingRight = parseFloat(computedStyle.paddingRight);
+    const padding = paddingLeft; // Use left padding as reference (assuming symmetric)
+    
+    const cellAreaWidth = timeScaleRect.width - (paddingLeft + paddingRight);
     const cellWidth = cellAreaWidth / 24;
     const verticalPadding = 4;
     
@@ -88,10 +104,46 @@ export function TimezoneTimeList({
       timeScaleRect,
       containerRect,
       padding,
+      paddingLeft,
+      paddingRight,
       cellWidth,
       verticalPadding,
     };
   }, []);
+
+  // Recalculate dimensions only when timeScaleConfigs change or on resize
+  useEffect(() => {
+    const updateDimensions = () => {
+      const dims = getCellDimensions();
+      if (dims) {
+        setCachedDimensions(dims);
+      }
+    };
+
+    // Initial calculation
+    updateDimensions();
+
+    // Use ResizeObserver to detect size changes
+    const timeScaleElement = firstTimeScaleRef.current?.querySelector('.time-scale') as HTMLElement;
+    const containerElement = containerRef.current;
+
+    if (!timeScaleElement || !containerElement) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateDimensions();
+    });
+
+    resizeObserver.observe(timeScaleElement);
+    resizeObserver.observe(containerElement);
+
+    // Also listen to window resize as fallback
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, [timeScaleConfigs.length, getCellDimensions]);
 
   // Calculate overlay position and size when hoverPosition changes
   useEffect(() => {
@@ -100,16 +152,17 @@ export function TimezoneTimeList({
       return;
     }
 
-    const dims = getCellDimensions();
+    // Use cached dimensions instead of recalculating on every hover
+    const dims = cachedDimensions;
     if (!dims) {
       setOverlayStyle(null);
       return;
     }
 
-    const { timeScaleRect, containerRect, padding, cellWidth, verticalPadding } = dims;
+    const { timeScaleRect, containerRect, paddingLeft, cellWidth, verticalPadding } = dims;
     
     // Calculate overlay position relative to container
-    const overlayLeft = timeScaleRect.left - containerRect.left + padding + (hoverPosition * cellWidth);
+    const overlayLeft = timeScaleRect.left - containerRect.left + paddingLeft + (hoverPosition * cellWidth);
     const overlayWidth = cellWidth;
     const overlayTop = verticalPadding;
     const overlayHeight = containerRect.height - (verticalPadding * 2);
@@ -120,7 +173,7 @@ export function TimezoneTimeList({
       top: overlayTop,
       height: overlayHeight,
     });
-  }, [hoverPosition, timeScaleConfigs.length, isSelecting, getCellDimensions]);
+  }, [hoverPosition, isSelecting, cachedDimensions]);
 
   useEffect(() => {
     if (!isSelecting || startPosition === null || endPosition === null) {
@@ -128,20 +181,21 @@ export function TimezoneTimeList({
       return;
     }
 
-    const dims = getCellDimensions();
+    // Use cached dimensions instead of recalculating
+    const dims = cachedDimensions;
     if (!dims) {
       setSelectionStyle(null);
       return;
     }
 
-    const { timeScaleRect, containerRect, padding, cellWidth, verticalPadding } = dims;
+    const { timeScaleRect, containerRect, paddingLeft, cellWidth, verticalPadding } = dims;
     
     // Ensure start <= end
     const minPos = Math.min(startPosition, endPosition);
     const maxPos = Math.max(startPosition, endPosition);
     
     // Calculate selection area
-    const selectionLeft = timeScaleRect.left - containerRect.left + padding + (minPos * cellWidth);
+    const selectionLeft = timeScaleRect.left - containerRect.left + paddingLeft + (minPos * cellWidth);
     const selectionWidth = (maxPos - minPos + 1) * cellWidth;
     const selectionTop = verticalPadding;
     const selectionHeight = containerRect.height - (verticalPadding * 2);
@@ -164,7 +218,7 @@ export function TimezoneTimeList({
       timescaleAreaLeft,
       timescaleAreaWidth,
     });
-  }, [isSelecting, startPosition, endPosition, timeScaleConfigs.length, getCellDimensions]);
+  }, [isSelecting, startPosition, endPosition, cachedDimensions]);
 
   // Sync refs with state
   useEffect(() => {
@@ -181,11 +235,45 @@ export function TimezoneTimeList({
     const timeScaleElement = firstTimeScaleRef.current.querySelector('.time-scale') as HTMLElement;
     if (!timeScaleElement) return;
 
+    // Use cached dimensions if available, otherwise calculate on the fly
+    const dims = cachedDimensions;
+    if (!dims) {
+      // Fallback: calculate if cache is not available
+      const rect = timeScaleElement.getBoundingClientRect();
+      const computedStyle = window.getComputedStyle(timeScaleElement);
+      const paddingLeft = parseFloat(computedStyle.paddingLeft);
+      const paddingRight = parseFloat(computedStyle.paddingRight);
+      const cellAreaWidth = rect.width - (paddingLeft + paddingRight);
+      const cellWidth = cellAreaWidth / 24;
+      const x = e.clientX - rect.left - paddingLeft;
+      const position = Math.max(0, Math.min(23, Math.floor(x / cellWidth)));
+      
+      const currentStart = startPositionRef.current;
+      const currentEnd = endPositionRef.current;
+      const currentDraggingBorder = draggingBorderRef.current;
+
+      if (currentDraggingBorder === 'left') {
+        if (currentStart !== null && currentEnd !== null) {
+          const newStart = Math.min(position, currentEnd);
+          if (currentEnd - newStart >= 0) {
+            setStartPosition(newStart);
+          }
+        }
+      } else if (currentDraggingBorder === 'right') {
+        if (currentStart !== null && currentEnd !== null) {
+          const newEnd = Math.max(position, currentStart);
+          if (newEnd - currentStart >= 0) {
+            setEndPosition(newEnd);
+          }
+        }
+      }
+      return;
+    }
+
+    // Use cached dimensions - only recalculate rect for mouse position
     const rect = timeScaleElement.getBoundingClientRect();
-    const padding = 8;
-    const cellAreaWidth = rect.width - (padding * 2);
-    const cellWidth = cellAreaWidth / 24;
-    const x = e.clientX - rect.left - padding;
+    const { paddingLeft, cellWidth } = dims;
+    const x = e.clientX - rect.left - paddingLeft;
     const position = Math.max(0, Math.min(23, Math.floor(x / cellWidth)));
 
     const currentStart = startPositionRef.current;
@@ -210,7 +298,7 @@ export function TimezoneTimeList({
       }
     }
     // Removed: auto-update endPosition on hover - only allow dragging borders
-  }, []);
+  }, [cachedDimensions]);
 
   // Handle mouse up to stop dragging
   const handleSelectionMouseUp = useCallback(() => {
@@ -322,6 +410,7 @@ export function TimezoneTimeList({
   return (
     <div ref={containerRef} className="relative flex-1 overflow-y-auto">
       <div className="relative overflow-x-visible overflow-y-visible">
+        {/* Timezone time rows */}
         {timeScaleConfigs.map(({ timezone, config }, index) => (
           <TimezoneTimeRow
             key={timezone.id}
@@ -346,6 +435,7 @@ export function TimezoneTimeList({
             isCustomTime={isCustomTime}
           />
         ))}
+
         {/* Vertical highlight overlay */}
         {overlayStyle && hoverPosition !== null && !isSelecting && (
           <div

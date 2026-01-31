@@ -3,6 +3,7 @@ import { Home, X } from 'lucide-react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { TimezoneWithOffset } from '../types';
 import { getTimezoneAbbreviation } from '../utils/timezone';
+import { getTimezoneOffset } from '../utils/timeScale';
 
 interface TimezoneInfoProps {
   timezone: TimezoneWithOffset;
@@ -52,9 +53,12 @@ export function TimezoneInfo({
   // Format date as "Thu, Jan 29"
   const formattedDateStr = formatInTimeZone(timezone.currentTime, timezone.timezone, 'EEE, MMM d');
 
-  // Get default label (use custom label or timezone abbreviation)
-  const defaultLabel = timezone.label || getTimezoneAbbreviation(timezone.timezone, timezone.currentTime);
-  const displayLabel = timezone.label || defaultLabel;
+  // Get display label (use custom label or timezone abbreviation)
+  const displayLabel = timezone.label || getTimezoneAbbreviation(timezone.timezone, timezone.currentTime);
+
+  // Calculate UTC offset in hours
+  const utcOffset = getTimezoneOffset(timezone.timezone, 'Etc/UTC', timezone.currentTime);
+  const formattedUtcOffset = utcOffset > 0 ? `+${utcOffset}` : `${utcOffset}`;
 
   // Initialize label value when entering edit mode
   useEffect(() => {
@@ -91,7 +95,7 @@ export function TimezoneInfo({
 
   return (
     <div
-      className={`group grid grid-cols-[auto_minmax(0,1fr)_minmax(0,auto)] gap-1 px-2 py-3 relative cursor-move transition-colors ${
+      className={`group grid grid-cols-[auto_minmax(0,1fr)_minmax(0,auto)] gap-1 px-1 relative cursor-move transition-colors ${
         isDragging ? 'opacity-50' : ''
       } ${dragOver ? 'bg-blue-50 border-t-2 border-t-primary' : ''}`}
       draggable={!!onDragStart}
@@ -100,7 +104,7 @@ export function TimezoneInfo({
       onDrop={onDrop}
     >
       {/* First column: Home button and Delete button */}
-      <div className="flex flex-col gap-1 items-start">
+      <div className="flex flex-col pt-3.5 gap-1 items-start">
         {onSetHome && (
           <button
             className={`bg-transparent border-0 cursor-pointer p-0 leading-none flex items-center justify-center transition-all ${
@@ -112,7 +116,7 @@ export function TimezoneInfo({
             disabled={timezone.isHome}
             title={timezone.isHome ? 'Home timezone' : 'Set as home timezone'}
           >
-            <Home size={12} strokeWidth={timezone.isHome ? 3 : 2} />
+            <Home size={12} strokeWidth={timezone.isHome ? 4 : 3} />
           </button>
         )}
         <button
@@ -120,12 +124,12 @@ export function TimezoneInfo({
           onClick={onRemove}
           title="Remove timezone"
         >
-          <X size={12} />
+          <X size={12} strokeWidth={3} />
         </button>
       </div>
 
       {/* Second column: Timezone label (editable) and name */}
-      <div className="flex flex-col items-start justify-center min-w-0 overflow-hidden">
+      <div className="flex flex-col items-start py-3 justify-center min-w-0 overflow-hidden">
         {isEditingLabel ? (
           <input
             ref={inputRef}
@@ -140,13 +144,22 @@ export function TimezoneInfo({
           />
         ) : (
           <div
-            className={`text-sm font-bold text-black leading-tight truncate w-full ${
+            className={`text-sm font-bold text-black leading-tight w-full ${
               onUpdateLabel ? 'cursor-text hover:bg-blue-100 rounded px-1 -mx-1' : ''
             }`}
             onClick={handleLabelClick}
             title={displayLabel}
           >
-            {displayLabel}
+            <div className="flex items-start w-full min-w-0 gap-1">
+              <span className="truncate flex-initial min-w-0">
+                {displayLabel}
+              </span>
+              
+              <span className="text-[9px] text-gray-600 font-mono font-medium 
+              leading-none bg-gray-100 rounded px-1 py-1 whitespace-nowrap shrink-0">
+                {formattedUtcOffset}
+              </span>
+            </div>
           </div>
         )}
         <div className="text-[10px] text-gray-500 leading-tight truncate w-full" title={timezone.name}>
@@ -155,7 +168,7 @@ export function TimezoneInfo({
       </div>
 
       {/* Third column: Time and date */}
-      <div className="flex flex-col items-end justify-center min-w-0 max-w-[140px] overflow-hidden">
+      <div className="flex flex-col items-end py-3 justify-center min-w-0 max-w-[140px] overflow-hidden">
         <div 
           className={`text-sm font-bold leading-tight flex items-baseline gap-0.5 truncate w-full justify-end transition-colors ${
             isCustomTime ? 'text-primary' : 'text-black'
