@@ -31,9 +31,9 @@ export function Popup() {
   return (
     <div className="w-[800px] max-h-[600px] flex flex-col font-sans antialiased">
       
-      <header className="grid grid-cols-[auto_1fr_auto] items-center px-4 py-3 border-b border-gray-200 bg-white gap-3">
+      <header className="grid grid-cols-[auto_1fr_auto] items-center px-3 py-2 border-b border-gray-200 bg-white gap-3">
         {/* Title */}
-        <h1 className="text-lg m-0 whitespace-nowrap flex items-baseline">
+        <h1 className="text-xl pl-2 whitespace-nowrap flex items-baseline">
           <span className="font-bold text-primary" style={{ fontFamily: '"Comic Sans MS", "Marker Felt", "Chalkboard", "Segoe Print", cursive' }}>worldtime</span>
           <span className="font-light text-primary">boy</span>
         </h1>
