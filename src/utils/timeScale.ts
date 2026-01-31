@@ -21,9 +21,12 @@ export function getTimezoneOffset(
 /**
  * Calculate time scale configuration for a timezone
  * @param timezone The timezone ID
- * @param referenceTimezone The reference timezone (first timezone)
+ * @param referenceTimezone The reference timezone (home timezone or first timezone).
+ *                          Used as the base for calculating baseTime - all time scale rows
+ *                          use the same referenceTimezone to ensure position 0 represents
+ *                          the same absolute time across all rows.
  * @param date The date to calculate for
- * @returns TimeScaleConfig with startHour and date markers
+ * @returns TimeScaleConfig with startHour, date markers, and baseTime
  */
 export function calculateTimeScaleConfig(
   timezone: string,
@@ -71,6 +74,7 @@ export function calculateTimeScaleConfig(
   return {
     startHour,
     dateMarkers,
+    baseTime,
   };
 }
 

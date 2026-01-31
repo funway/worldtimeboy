@@ -32,4 +32,5 @@ export interface UserPreferences {
 export interface TimeScaleConfig {
   startHour: number; // 0-23, where the time scale starts
   dateMarkers: Array<{ hour: number; date: string }>; // Where to show date markers (M/D)
+  baseTime: Date; // The absolute UTC time for position 0 (referenceTimezone's midnight)
 }

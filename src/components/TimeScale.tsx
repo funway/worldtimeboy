@@ -1,5 +1,6 @@
 import { TimeScaleConfig } from '../types';
 import { getHourAtPosition } from '../utils/timeScale';
+import { formatInTimeZone } from 'date-fns-tz';
 
 interface TimeScaleProps {
   config: TimeScaleConfig;
@@ -15,14 +16,19 @@ interface TimeScaleProps {
 
 export function TimeScale({
   config,
+  timezone,
   hourFormat,
   hoverPosition,
   onMouseMove,
   onMouseLeave,
   onClick,
 }: TimeScaleProps) {
-  const { startHour, dateMarkers } = config;
+  const { startHour, dateMarkers, baseTime } = config;
   const positions = Array.from({ length: 24 }, (_, i) => i);
+
+  // Check if this timezone has non-integer hour offset by checking the minute at baseTime
+  const minuteAtBaseTime = parseInt(formatInTimeZone(baseTime, timezone, 'm'), 10);
+  const hasNonIntegerOffset = minuteAtBaseTime !== 0;
 
   const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -112,7 +118,14 @@ export function TimeScale({
       onClick={handleClick}
     >
       {positions.map((position) => {
-        const actualHour = getHourAtPosition(position, startHour);
+        // Calculate the absolute time for this position
+        const absoluteTime = new Date(baseTime.getTime() + position * 60 * 60 * 1000);
+        
+        // Get hour and minute in the target timezone
+        const hourStr = formatInTimeZone(absoluteTime, timezone, 'H');
+        const minuteStr = formatInTimeZone(absoluteTime, timezone, 'mm'); // Use 'mm' for two-digit format
+        const actualHour = parseInt(hourStr, 10);
+        
         const dateMarker = getDateMarker(position);
         const isDay = isDayTime(actualHour);
         const isZeroHour = position === zeroHourPos;
@@ -161,6 +174,26 @@ export function TimeScale({
                   <span className="text-[10px] font-semibold leading-tight">{dateMarker.month}</span>
                   <span className="text-[10px] font-semibold leading-tight">{dateMarker.day}</span>
                 </>
+              ) : hasNonIntegerOffset ? (
+                // Display hour and minute for non-integer hour offset timezones
+                hourFormat === '12' ? (
+                  (() => {
+                    const { hour, ampm } = convertTo12Hour(actualHour);
+                    return (
+                      <>
+                        <span className="text-[10px] font-medium leading-tight">
+                          {hour}<span className="text-[8px] font-normal">{minuteStr}</span>
+                        </span>
+                        <span className="text-[8px] font-normal leading-tight">{ampm}</span>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <>
+                    <span className="text-[10px] font-semibold leading-tight">{actualHour}</span>
+                    <span className="text-[8px] font-normal leading-tight">{minuteStr}</span>
+                  </>
+                )
               ) : hourFormat === '12' ? (
                 (() => {
                   const { hour, ampm } = convertTo12Hour(actualHour);
