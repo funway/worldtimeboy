@@ -26,6 +26,7 @@ export interface TimeRange {
 
 export interface UserPreferences {
   hourFormat: '12' | '24';
+  showUtcOffset?: boolean;
 }
 
 export interface TimeScaleConfig {

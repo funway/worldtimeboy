@@ -131,6 +131,7 @@ export async function getPreferences(): Promise<UserPreferences> {
       resolve(
         result[STORAGE_KEYS.PREFERENCES] || {
           hourFormat: '24',
+          showUtcOffset: true,
         }
       );
     });

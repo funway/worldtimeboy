@@ -8,6 +8,7 @@ interface TimezoneTimeRowProps {
   config: TimeScaleConfig;
   hoverPosition: number | null;
   hourFormat: '12' | '24';
+  showUtcOffset?: boolean;
   onRemove: () => void;
   onSetHome?: () => void;
   onUpdateLabel?: (label: string) => void;
@@ -30,6 +31,7 @@ export function TimezoneTimeRow({
   config,
   hoverPosition,
   hourFormat,
+  showUtcOffset = true,
   onRemove,
   onSetHome,
   onUpdateLabel,
@@ -57,6 +59,7 @@ export function TimezoneTimeRow({
       <TimezoneInfo
         timezone={timezone}
         hourFormat={hourFormat}
+        showUtcOffset={showUtcOffset}
         onRemove={onRemove}
         onSetHome={onSetHome}
         onUpdateLabel={onUpdateLabel}

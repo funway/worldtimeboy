@@ -8,6 +8,7 @@ import { getTimezoneOffset } from '../utils/timeScale';
 interface TimezoneInfoProps {
   timezone: TimezoneWithOffset;
   hourFormat: '12' | '24';
+  showUtcOffset?: boolean;
   onRemove: () => void;
   onSetHome?: () => void;
   onUpdateLabel?: (label: string) => void;
@@ -22,6 +23,7 @@ interface TimezoneInfoProps {
 export function TimezoneInfo({
   timezone,
   hourFormat,
+  showUtcOffset = true,
   onRemove,
   onSetHome,
   onUpdateLabel,
@@ -109,18 +111,19 @@ export function TimezoneInfo({
           <button
             className={`bg-transparent border-0 cursor-pointer p-0 leading-none flex items-center justify-center transition-all ${
               timezone.isHome
-                ? 'text-gray-600 disabled:opacity-100 disabled:cursor-not-allowed opacity-100'
+                ? 'text-primary disabled:opacity-100 disabled:cursor-not-allowed opacity-100'
                 : 'text-gray-600 hover:text-primary opacity-0 group-hover:opacity-100'
             }`}
             onClick={onSetHome}
             disabled={timezone.isHome}
             title={timezone.isHome ? 'Home timezone' : 'Set as home timezone'}
           >
-            <Home size={12} strokeWidth={timezone.isHome ? 4 : 3} />
+            <Home size={12} strokeWidth={timezone.isHome ? 3 : 3} />
           </button>
         )}
         <button
-          className="bg-transparent border-0 text-gray-500 cursor-pointer p-0 leading-none flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 hover:text-red-600"
+          className="bg-transparent border-0 text-gray-500 cursor-pointer p-0 leading-none flex items-center justify-center transition-all opacity-0 
+          group-hover:opacity-100 hover:text-red-600"
           onClick={onRemove}
           title="Remove timezone"
         >
@@ -155,10 +158,12 @@ export function TimezoneInfo({
                 {displayLabel}
               </span>
               
-              <span className="text-[9px] text-gray-600 font-mono font-medium 
-              leading-none bg-gray-100 rounded px-1 py-1 whitespace-nowrap shrink-0">
-                {formattedUtcOffset}
-              </span>
+              {showUtcOffset && (
+                <span className="text-[9px] text-gray-600 font-medium leading-none 
+                bg-gray-100 rounded px-1 py-1 whitespace-nowrap shrink-0">
+                  {formattedUtcOffset}
+                </span>
+              )}
             </div>
           </div>
         )}

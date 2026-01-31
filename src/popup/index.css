@@ -5,6 +5,12 @@
 @layer base {
   body {
     @apply m-0 font-sans antialiased text-base;
+    /* Use tabular numbers for consistent number alignment */
+    /* Modern system fonts support tabular-nums, which makes numbers equal-width */
+    /* Note: CSS cannot truly apply monospace font only to numbers without affecting text */
+    /* tabular-nums is the best cross-browser solution for number alignment */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
   #root {

@@ -8,6 +8,7 @@ interface TimezoneTimeListProps {
   timeScaleConfigs: Array<{ timezone: TimezoneWithOffset; config: TimeScaleConfig }>;
   hoverPosition: number | null;
   hourFormat: '12' | '24';
+  showUtcOffset?: boolean;
   onRemove: (timezoneId: string) => void;
   onSetHome: (timezoneId: string) => void;
   onUpdateLabel?: (timezoneId: string, label: string) => void;
@@ -23,6 +24,7 @@ export function TimezoneTimeList({
   timeScaleConfigs,
   hoverPosition,
   hourFormat,
+  showUtcOffset = true,
   onRemove,
   onSetHome,
   onUpdateLabel,
@@ -418,6 +420,7 @@ export function TimezoneTimeList({
             config={config}
             hoverPosition={hoverPosition}
             hourFormat={hourFormat}
+            showUtcOffset={showUtcOffset}
             onRemove={() => onRemove(timezone.id)}
             onSetHome={() => onSetHome(timezone.id)}
             onUpdateLabel={onUpdateLabel ? (label: string) => onUpdateLabel(timezone.id, label) : undefined}
