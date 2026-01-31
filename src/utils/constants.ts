@@ -1,5 +1,6 @@
 // City alias mapping for timezone search
 export const CITY_ALIASES: Record<string, string> = {
+  china: 'Asia/Shanghai',
   beijing: 'Asia/Shanghai',
   peking: 'Asia/Shanghai',
   'hong kong': 'Asia/Hong_Kong',
@@ -8,13 +9,20 @@ export const CITY_ALIASES: Record<string, string> = {
   'los angeles': 'America/Los_Angeles',
   'san francisco': 'America/Los_Angeles',
   'mexico city': 'America/Mexico_City',
+  japan: 'Asia/Tokyo',
+  india: 'Asia/Kolkata',
   mumbai: 'Asia/Kolkata',
   delhi: 'Asia/Kolkata',
+  kazakhstan: 'Asia/Almaty',
+  argentina: 'America/Argentina/Buenos_Aires',
+  england: 'Europe/London',
+  france: 'Europe/Paris',
+  germany: 'Europe/Berlin',
+  italy: 'Europe/Rome',
+  spain: 'Europe/Madrid',
   // UTC timezone aliases
   utc: 'Etc/UTC',
   gmt: 'Etc/GMT',
-  'gmt+0': 'Etc/GMT',
-  'gmt-0': 'Etc/GMT',
 };
 
 // Default popup dimensions
