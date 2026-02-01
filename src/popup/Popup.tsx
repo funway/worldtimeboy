@@ -44,6 +44,7 @@ export function Popup() {
             onAddTimezone={addTimezone}
             homeTimezone={homeTimezone}
             onTimeChange={setCustomTime}
+            hourFormat={currentFormat}
           />
         </div>
         

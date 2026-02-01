@@ -12,10 +12,10 @@ export function useTimezones() {
   }
 
   // Add a timezone by IANA ID
-  async function addTimezoneById(timezoneId: string) {
+  async function addTimezoneById(timezoneId: string, name?: string) {
     const timezone: Timezone = {
       id: generateTimezoneId(timezoneId),
-      name: formatTimezoneName(timezoneId),
+      name: name || formatTimezoneName(timezoneId),
       timezone: timezoneId,
     };
     await addTimezone(timezone);

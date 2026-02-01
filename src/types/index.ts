@@ -1,10 +1,13 @@
+/**
+ * 表示一个时区对象，用于存储和管理用户选择的时区相关信息
+ */
 export interface Timezone {
-  id: string;
-  name: string;
-  timezone: string; // IANA timezone ID, e.g., "Asia/Shanghai"
-  label?: string; // Custom timezone abbreviation label (e.g., "HKT", "PKT", "PST")
-  isHome?: boolean; // Whether this is the home timezone
-  order?: number; // Order index for sorting
+  id: string;        // 唯一标识符
+  label?: string;    // 自定义时区缩写标签（如 "HKT", "PKT", "PST"）
+  isHome?: boolean;  // 是否为主时区（home timezone）
+  order?: number;    // 排序索引，用于展示顺序
+  name: string;      // 时区的名称（如 "China Standard Time", "Beijing"）
+  timezone: string;  // IANA 时区 ID，例如 "Asia/Shanghai"
 }
 
 export interface TimezoneWithOffset extends Timezone {

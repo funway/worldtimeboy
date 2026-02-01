@@ -14,6 +14,10 @@
   "Germany": "Europe/Berlin",
   "Italy": "Europe/Rome",
   "Spain": "Europe/Madrid",
+  "Ottawa": "America/Toronto",
+  "Montreal": "America/Toronto",
+  "San Fran": "America/Los_Angeles",
+  "Seattle": "America/Los_Angeles",
   "UTC": "Etc/UTC",
   "GMT": "Etc/GMT"
 }

@@ -99,26 +99,64 @@ export function searchTimezones(query: string): Array<{ id: string; name: string
   const addedTimezones = new Set<string>();
   const MAX_RESULTS = 20;
 
-  // Search in both display names (priority) and timezone IDs in a single pass
+  // Collect all matches first, then sort by relevance
+  const matches: Array<{ name: string; timezone: string; score: number }> = [];
+  
   for (const [name, timezoneId] of Object.entries(dict)) {
-    if (addedTimezones.has(timezoneId)) continue;
-    if (results.length >= MAX_RESULTS) break;
-
-    // Priority 1: Check display name first
     const normalizedName = normalizeQuery(name);
-    const matchesName = normalizedName.includes(normalizedQuery);
+    const normalizedTzId = normalizeQuery(timezoneId);
     
-    // Priority 2: Check timezone ID if name doesn't match (avoid unnecessary normalization)
-    const matchesId = !matchesName && normalizeQuery(timezoneId).includes(normalizedQuery);
-
-    if (matchesName || matchesId) {
-      results.push({
-        id: timezoneId,
-        name: name,
-        timezone: timezoneId,
-      });
-      addedTimezones.add(timezoneId);
+    // Calculate match score: exact match = 3, starts with = 2, contains = 1
+    let score = 0;
+    let matchesName = false;
+    let matchesId = false;
+    
+    if (normalizedName === normalizedQuery) {
+      score = 3;
+      matchesName = true;
+    } else if (normalizedName.startsWith(normalizedQuery)) {
+      score = 2;
+      matchesName = true;
+    } else if (normalizedName.includes(normalizedQuery)) {
+      score = 1;
+      matchesName = true;
     }
+    
+    if (!matchesName) {
+      if (normalizedTzId === normalizedQuery) {
+        score = 3;
+        matchesId = true;
+      } else if (normalizedTzId.startsWith(normalizedQuery)) {
+        score = 2;
+        matchesId = true;
+      } else if (normalizedTzId.includes(normalizedQuery)) {
+        score = 1;
+        matchesId = true;
+      }
+    }
+    
+    if (matchesName || matchesId) {
+      matches.push({ name, timezone: timezoneId, score });
+    }
+  }
+  
+  // Sort by score (descending), then by name (ascending)
+  matches.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.name.localeCompare(b.name);
+  });
+  
+  // Add results, avoiding duplicates by timezone ID
+  for (const match of matches) {
+    if (addedTimezones.has(match.timezone)) continue;
+    if (results.length >= MAX_RESULTS) break;
+    
+    results.push({
+      id: match.timezone,
+      name: match.name,
+      timezone: match.timezone,
+    });
+    addedTimezones.add(match.timezone);
   }
 
   return results;

@@ -39,12 +39,13 @@ function createDateInTimezone(
 }
 
 interface TimezoneSearchProps {
-  onAddTimezone: (timezoneId: string) => void;
+  onAddTimezone: (timezoneId: string, name?: string) => void;
   homeTimezone?: string;
   onTimeChange?: (time: Date | null) => void;
+  hourFormat?: '12' | '24';
 }
 
-export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: TimezoneSearchProps) {
+export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange, hourFormat = '24' }: TimezoneSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Array<{ id: string; name: string; timezone: string }>>([]);
   const [showResults, setShowResults] = useState(false);
@@ -129,8 +130,8 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
     }
   }, [selectedIndex]);
 
-  const handleSelect = (timezoneId: string) => {
-    onAddTimezone(timezoneId);
+  const handleSelect = (timezoneId: string, name: string) => {
+    onAddTimezone(timezoneId, name);
     setQuery('');
     setShowResults(false);
     setSelectedIndex(-1);
@@ -151,7 +152,7 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
       case 'Enter':
         e.preventDefault();
         if (selectedIndex >= 0 && selectedIndex < results.length) {
-          handleSelect(results[selectedIndex].timezone);
+          handleSelect(results[selectedIndex].timezone, results[selectedIndex].name);
         }
         break;
       case 'Escape':
@@ -183,7 +184,19 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
           {results.map((result, index) => {
             // Calculate current time for this timezone
             const now = new Date();
-            const currentTime = formatInTimeZone(now, result.timezone, 'HH:mm');
+            const timeFormat = hourFormat === '12' ? 'h:mm a' : 'HH:mm';
+            const formattedTime = formatInTimeZone(now, result.timezone, timeFormat);
+            
+            // Parse time for 12-hour format display
+            let displayTime: string;
+            let displayAmpm: string | null = null;
+            if (hourFormat === '12' && formattedTime.includes(' ')) {
+              const parts = formattedTime.split(' ');
+              displayTime = parts[0];
+              displayAmpm = parts.slice(1).join(' ');
+            } else {
+              displayTime = formattedTime;
+            }
             
             // Calculate UTC offset
             const utcOffset = getTimezoneOffset(result.timezone, 'Etc/UTC', now);
@@ -198,15 +211,18 @@ export function TimezoneSearch({ onAddTimezone, homeTimezone, onTimeChange }: Ti
                     ? 'bg-blue-100 hover:bg-blue-100'
                     : 'hover:bg-gray-50'
                 }`}
-                onClick={() => handleSelect(result.timezone)}
+                onClick={() => handleSelect(result.timezone, result.name)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className="text-sm font-bold text-gray-800">{result.name}</span>
-                  <span className="text-xs text-gray-500">{currentTime}</span>
+                  <span className="text-xs font-semibold text-gray-600 flex items-baseline gap-0.5">
+                    <span>{displayTime}</span>
+                    {displayAmpm && <span className="text-[10px]">{displayAmpm}</span>}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{result.timezone}</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600">{result.timezone}</span>
                   <span className="text-[9px] text-gray-600 font-mono font-medium leading-none bg-gray-100 rounded px-1 py-1 whitespace-nowrap">
                     {formattedUtcOffset}
                   </span>

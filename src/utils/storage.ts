@@ -44,8 +44,8 @@ export async function saveTimezones(timezones: Timezone[]): Promise<void> {
 
 export async function addTimezone(timezone: Timezone): Promise<void> {
   const timezones = await getTimezones();
-  // Check if timezone already exists
-  if (!timezones.find((tz) => tz.timezone === timezone.timezone)) {
+  // Check if [name, timezone] combination already exists
+  if (!timezones.find((tz) => tz.name === timezone.name && tz.timezone === timezone.timezone)) {
     // Set order if not provided
     if (timezone.order === undefined) {
       timezone.order = timezones.length;
