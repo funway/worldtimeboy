@@ -1,0 +1,19 @@
+{
+  "China": "Asia/Shanghai",
+  "Beijing": "Asia/Shanghai",
+  "Peking": "Asia/Shanghai",
+  "San Francisco": "America/Los_Angeles",
+  "Japan": "Asia/Tokyo",
+  "India": "Asia/Kolkata",
+  "Mumbai": "Asia/Kolkata",
+  "Delhi": "Asia/Kolkata",
+  "Kazakhstan": "Asia/Almaty",
+  "Argentina": "America/Argentina/Buenos_Aires",
+  "England": "Europe/London",
+  "France": "Europe/Paris",
+  "Germany": "Europe/Berlin",
+  "Italy": "Europe/Rome",
+  "Spain": "Europe/Madrid",
+  "UTC": "Etc/UTC",
+  "GMT": "Etc/GMT"
+}
