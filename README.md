@@ -9,30 +9,41 @@ A lightweight Chrome Extension that displays multiple timezones in [WorldTimeBud
 - Time range selection with drag-to-select
 - Real-time time updates
 
-## Development
+## Screenshots
+![Screenshot](screenshots/screenshot1.png)
+![Screenshot](screenshots/screenshot2.png)
+![Screenshot](screenshots/screenshot3.png)
+
+## Installation & Development
+
+### Option 1: Install from Chrome Web Store
+
+Visit the [Chrome Web Store link](https://chromewebstore.google.com/detail/gmbobjlafdlebknmneehhkhalhkncdja?utm_source=item-share-cb) and add the extension directly to your browser.
+
+### Option 2: Build & Install Locally
 
 1. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-2. Build for development:
-```bash
-npm run dev
-```
+2. For development, start the dev server:
+   ```bash
+   npm run dev
+   ```
 
-3. Build for production:
-```bash
-npm run build
-```
+3. To build for production:
+   ```bash
+   npm run build
+   ```
 
-## Loading the Extension
+4. Load the extension in Chrome:
+   - Run the production build: `npm run build`
+   - Open Chrome and go to `chrome://extensions/`
+   - Enable "Developer mode"
+   - Click "Load unpacked"
+   - Select the `dist` directory
 
-1. Build the extension: `npm run build`
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode"
-4. Click "Load unpacked"
-5. Select the `dist` directory
 
 ## Project Structure
 
