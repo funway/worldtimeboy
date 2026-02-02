@@ -1,12 +1,11 @@
 # WorldTimeBoy Chrome Extension
 
-A Chrome Extension that displays multiple timezones in a WorldTimeBuddy-style interface.
+A lightweight Chrome Extension that displays multiple timezones in [WorldTimeBuddy.com](https://www.worldtimebuddy.com/) styled interface.
 
 ## Features
 
-- Multi-timezone time display with 24-hour time scale
+- Multi-timezone time display with 12/24-hour time scale
 - Search and add timezones
-- Auto-detect user's local timezone
 - Time range selection with drag-to-select
 - Real-time time updates
 
@@ -41,12 +40,14 @@ npm run build
 worldtimeboy/
 ├── src/
 │   ├── components/     # React components
+│   ├── data/           # Custom city-timezone data
 │   ├── hooks/          # Custom React hooks
 │   ├── utils/          # Utility functions
 │   ├── types/          # TypeScript type definitions
 │   └── popup/          # Popup entry point
 ├── public/             # Static assets (manifest.json, icons)
 └── dist/               # Build output (generated)
+└── screenshots/        # Screenshots
 ```
 
 ## Technologies
