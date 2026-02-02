@@ -3,6 +3,7 @@
   "name": "WorldTimeBoy",
   "version": "1.1.0",
   "author": "fengwei.wang",
+  "homepage_url": "https://github.com/funway/worldtimeboy",
   "description": "Multi-timezone time display Chrome Extension. Inspired by WorldTimeBuddy.com",
   "permissions": [
     "storage"
