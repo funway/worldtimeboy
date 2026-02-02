@@ -31,7 +31,7 @@ function buildTimezoneDictionary(): Record<string, string> {
 
   // Step 1: Load city-timezones.json first
   for (const [name, timezoneId] of Object.entries(cityTimezones)) {
-    dict[name] = timezoneId;
+    dict[name] = timezoneId as string;
   }
 
   // Step 2: Load all timezones from Intl.supportedValuesOf
@@ -49,8 +49,8 @@ function buildTimezoneDictionary(): Record<string, string> {
       // Add each timezone with formatted name as key
       // System-generated names override city-timezones.json entries
       for (const timezoneId of allTimezones) {
-        const formattedName = formatTimezoneName(timezoneId);
-        dict[formattedName] = timezoneId;
+        const formattedName = formatTimezoneName(timezoneId as string);
+        dict[formattedName] = timezoneId as string;
       }
     } else {
       // Fallback: add common timezones
