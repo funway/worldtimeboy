@@ -102,5 +102,6 @@
   "Bamako": "Africa/Bamako",
 
   "UTC": "Etc/UTC",
-  "GMT": "Etc/GMT"
+  "GMT": "Etc/GMT",
+  "AoE (Anywhere on Earth)": "Etc/GMT+12"
 }
